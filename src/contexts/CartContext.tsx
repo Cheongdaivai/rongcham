@@ -1,12 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { CartItem, FoodItem, CartContextType } from '@/types';
+import { CartItem, MenuItem, CartContextType, Order } from '@/types';
+import { createOrder } from '@/lib/database';
 
 type CartAction = 
-  | { type: 'ADD_ITEM'; payload: FoodItem }
+  | { type: 'ADD_ITEM'; payload: MenuItem }
   | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'UPDATE_QUANTITY'; payload: { menu_id: string; quantity: number } }
   | { type: 'CLEAR_CART' };
 
 interface CartState {
@@ -18,13 +19,13 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
+      const existingItem = state.items.find(item => item.menu_id === action.payload.menu_id);
       
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
-            item.id === action.payload.id
+            item.menu_id === action.payload.menu_id
               ? { ...item, quantity: item.quantity + 1 }
               : item
           ),
@@ -33,30 +34,36 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       
       return {
         ...state,
-        items: [...state.items, { ...action.payload, quantity: 1 }],
+        items: [...state.items, {
+          menu_id: action.payload.menu_id,
+          name: action.payload.name,
+          price: action.payload.price,
+          quantity: 1,
+          image_url: action.payload.image_url
+        }],
       };
     }
     
     case 'REMOVE_ITEM':
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
+        items: state.items.filter(item => item.menu_id !== action.payload),
       };
     
     case 'UPDATE_QUANTITY': {
-      const { id, quantity } = action.payload;
+      const { menu_id, quantity } = action.payload;
       
       if (quantity <= 0) {
         return {
           ...state,
-          items: state.items.filter(item => item.id !== id),
+          items: state.items.filter(item => item.menu_id !== menu_id),
         };
       }
       
       return {
         ...state,
         items: state.items.map(item =>
-          item.id === id ? { ...item, quantity } : item
+          item.menu_id === menu_id ? { ...item, quantity } : item
         ),
       };
     }
@@ -75,20 +82,40 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
 
-  const addItem = (item: FoodItem) => {
-    dispatch({ type: 'ADD_ITEM', payload: item });
+  const addItem = (menuItem: MenuItem) => {
+    dispatch({ type: 'ADD_ITEM', payload: menuItem });
   };
 
-  const removeItem = (itemId: string) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: itemId });
+  const removeItem = (menu_id: string) => {
+    dispatch({ type: 'REMOVE_ITEM', payload: menu_id });
   };
 
-  const updateQuantity = (itemId: string, quantity: number) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { id: itemId, quantity } });
+  const updateQuantity = (menu_id: string, quantity: number) => {
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { menu_id, quantity } });
   };
 
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const createOrderFromCart = async (customerNote?: string): Promise<Order | null> => {
+    if (state.items.length === 0) return null;
+
+    const orderItems = state.items.map(item => ({
+      menu_id: item.menu_id,
+      quantity: item.quantity
+    }));
+
+    try {
+      const order = await createOrder(orderItems, customerNote);
+      if (order) {
+        clearCart(); // Clear cart after successful order
+      }
+      return order;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      return null;
+    }
   };
 
   const total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -102,6 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clearCart,
     total,
     itemCount,
+    createOrder: createOrderFromCart,
   };
 
   return (

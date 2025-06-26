@@ -1,103 +1,148 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { CartProvider, useCart } from '@/contexts/CartContext';
+import { Header } from '@/components/Header';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Plus } from 'lucide-react';
+import { sampleMenuItems } from '@/data/foodItems';
+import { MenuItem } from '@/types';
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <CartProvider>
+      <HomeContent />
+    </CartProvider>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+function HomeContent() {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch menu items from the API instead of using sample data
+    const fetchMenuItems = async () => {
+      try {
+        const response = await fetch('/api/menu');
+        if (response.ok) {
+          const items = await response.json();
+          setMenuItems(items);
+        } else {
+          console.error('Failed to fetch menu items');
+          // Fallback to sample data if API fails
+          setMenuItems(sampleMenuItems);
+        }
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+        // Fallback to sample data if API fails
+        setMenuItems(sampleMenuItems);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading menu...</div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">Our Menu</h1>
+          <p className="text-lg text-muted-foreground">
+            Delicious Thai cuisine made fresh daily
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {menuItems.map((item) => (
+            <MenuItemCard key={item.menu_id} item={item} />
+          ))}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
+  );
+}
+
+function MenuItemCard({ item }: { item: MenuItem }) {
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="relative h-48 w-full bg-gray-200 flex items-center justify-center">
+        <span className="text-gray-500 text-sm">NO IMAGE</span>
+        {!item.availability && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <Badge variant="destructive">Out of Stock</Badge>
+          </div>
+        )}
+      </div>
+      
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg">{item.name}</CardTitle>
+          </div>
+          <div className="text-lg font-bold text-primary">
+            ${item.price.toFixed(2)}
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <CardDescription className="text-sm">
+          {item.description}
+        </CardDescription>
+      </CardContent>
+      
+      <div className="p-6 pt-0">
+        <AddToCartButton item={item} />
+      </div>
+    </Card>
+  );
+}
+
+function AddToCartButton({ item }: { item: MenuItem }) {
+  const { addItem } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
+  
+  const handleAddToCart = async () => {
+    if (!item.availability) return;
+    
+    setIsAdding(true);
+    try {
+      addItem(item);
+      // Brief delay for user feedback
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <Button 
+      onClick={handleAddToCart}
+      disabled={!item.availability || isAdding}
+      className="w-full"
+      size="sm"
+    >
+      <Plus className="w-4 h-4 mr-2" />
+      {isAdding ? 'Adding...' : 'Add to Cart'}
+    </Button>
   );
 }

@@ -1,3 +1,45 @@
+export interface MenuItem {
+  menu_id: string;
+  name: string;
+  price: number;
+  availability: boolean;
+  image_url?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Order {
+  order_id: number;
+  order_number: number;
+  total_amount: number;
+  status: 'pending' | 'preparing' | 'done' | 'cancelled';
+  customer_note?: string;
+  created_at: string;
+  updated_at: string;
+  order_items?: OrderItem[];
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: number;
+  menu_id: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  created_at: string;
+  menu_item?: MenuItem;
+}
+
+export interface CartItem {
+  menu_id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image_url?: string;
+}
+
+// Legacy types for backward compatibility
 export interface FoodItem {
   id: string;
   name: string;
@@ -8,27 +50,13 @@ export interface FoodItem {
   available: boolean;
 }
 
-export interface CartItem extends FoodItem {
-  quantity: number;
-}
-
-export interface Order {
-  id: string;
-  items: CartItem[];
-  total: number;
-  customerId?: string;
-  customerName?: string;
-  customerEmail?: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered';
-  createdAt: Date;
-}
-
 export interface CartContextType {
   items: CartItem[];
-  addItem: (item: FoodItem) => void;
+  addItem: (item: MenuItem) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   total: number;
   itemCount: number;
+  createOrder: (customerNote?: string) => Promise<Order | null>;
 }

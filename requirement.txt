@@ -1,0 +1,7 @@
+backend requirements
+1. Table for menu_item and order_item for supabase
+2. authentication for admin to access dashboard, user don't need authentication to access web menu
+3. CRUD operation for menu_item (user/customer can select menu item to create order_item, admin can perform CRUD to update availble information)
+4. CRUD operation for order_item (Get order from menu_item)
+
+i think the entity needed for this are: menu_item: menu_id (pk) , name, price, availability ( shown to users so they can order food, create by admin) order_item: order_id, {menu_id : quantity}, status(done or cancel), note for customization ( submitted by users and admin mark order status)

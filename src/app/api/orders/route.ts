@@ -1,78 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { Server as SocketIOServer } from 'socket.io';
-import { Server as NetServer } from 'http';
-import { Order } from '@/types';
+import { NextRequest, NextResponse } from 'next/server'
+import { createOrderServer, getAllOrdersServer, updateOrderStatusServer } from '@/lib/database-server'
 
-// In a real app, you would use a database
-let orders: Order[] = [];
-
-interface SocketServer extends NetServer {
-  io?: SocketIOServer;
+export async function GET() {
+  try {
+    const orders = await getAllOrdersServer()
+    return NextResponse.json({ orders })
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { items, total } = await request.json();
+    const { items, customerNote } = await request.json()
     
-    const newOrder: Order = {
-      id: Date.now().toString(),
-      items,
-      total,
-      status: 'pending',
-      createdAt: new Date(),
-    };
-    
-    orders.push(newOrder);
-    
-    // Emit to chef dashboard via WebSocket
-    const res = NextResponse.json({ success: true, order: newOrder });
-    
-    // Get socket.io instance and emit new order
-    const server = (global as any).server as SocketServer;
-    if (server?.io) {
-      server.io.emit('newOrder', newOrder);
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'Order items are required' }, { status: 400 })
     }
-    
-    return res;
-  } catch (error) {
-    console.error('Error processing order:', error);
-    return NextResponse.json(
-      { error: 'Failed to process order' },
-      { status: 500 }
-    );
-  }
-}
 
-export async function GET() {
-  return NextResponse.json({ orders });
+    // Convert items to the format expected by createOrder
+    const orderItems = items.map((item: any) => ({
+      menu_id: item.menu_id || item.id,
+      quantity: item.quantity
+    }))
+
+    const order = await createOrderServer(orderItems, customerNote)
+    
+    if (!order) {
+      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, order }, { status: 201 })
+  } catch (error) {
+    console.error('Error creating order:', error)
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+  }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const { orderId, status } = await request.json();
+    const { orderId, status } = await request.json()
     
-    const orderIndex = orders.findIndex(order => order.id === orderId);
-    if (orderIndex === -1) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
+    if (!orderId || !status) {
+      return NextResponse.json({ error: 'Order ID and status are required' }, { status: 400 })
     }
+
+    const updatedOrder = await updateOrderStatusServer(parseInt(orderId), status)
     
-    orders[orderIndex].status = status;
-    
-    // Emit status update via WebSocket
-    const server = (global as any).server as SocketServer;
-    if (server?.io) {
-      server.io.emit('orderStatusUpdate', { orderId, status });
+    if (!updatedOrder) {
+      return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
     }
-    
-    return NextResponse.json({ success: true, order: orders[orderIndex] });
+
+    return NextResponse.json({ success: true, order: updatedOrder })
   } catch (error) {
-    console.error('Error updating order:', error);
-    return NextResponse.json(
-      { error: 'Failed to update order' },
-      { status: 500 }
-    );
+    console.error('Error updating order:', error)
+    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
   }
 }

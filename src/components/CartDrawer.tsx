@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 export function CartDrawer() {
-  const { items, updateQuantity, removeItem, total, itemCount, clearCart } = useCart();
+  const { items, updateQuantity, removeItem, total, itemCount, clearCart, createOrder } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleCheckout = async () => {
@@ -18,23 +18,10 @@ export function CartDrawer() {
     setIsCheckingOut(true);
     
     try {
-      const order = {
-        items,
-        total,
-        createdAt: new Date(),
-      };
-
-      // Send order to API
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(order),
-      });
-
-      if (response.ok) {
-        clearCart();
+      // Use the createOrder function from CartContext instead of manual API call
+      const order = await createOrder();
+      
+      if (order) {
         alert('Order placed successfully!');
       } else {
         alert('Failed to place order. Please try again.');
@@ -79,12 +66,11 @@ export function CartDrawer() {
                 <p className="text-muted-foreground">Your cart is empty</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-3 border-b pb-4">
+              <div className="space-y-4">                {items.map((item) => (
+                  <div key={item.menu_id} className="flex items-center space-x-3 border-b pb-4">
                     <div className="relative h-16 w-16 rounded-lg overflow-hidden">
                       <Image
-                        src={item.image}
+                        src={item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'}
                         alt={item.name}
                         fill
                         className="object-cover"
@@ -97,13 +83,12 @@ export function CartDrawer() {
                       <p className="text-sm text-muted-foreground">
                         ${item.price.toFixed(2)} each
                       </p>
-                      
-                      <div className="flex items-center mt-2 space-x-2">
+                        <div className="flex items-center mt-2 space-x-2">
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.menu_id, item.quantity - 1)}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
@@ -116,7 +101,7 @@ export function CartDrawer() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.menu_id, item.quantity + 1)}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -125,7 +110,7 @@ export function CartDrawer() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-destructive"
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.menu_id)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
