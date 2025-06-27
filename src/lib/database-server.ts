@@ -23,12 +23,18 @@ export async function getMenuItemsServer(): Promise<MenuItem[]> {
   return data || []
 }
 
-export async function getAllMenuItemsServer(): Promise<MenuItem[]> {
+export async function getAllMenuItemsServer(businessEmail?: string): Promise<MenuItem[]> {
   const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('menu_item')
     .select('*')
-    .order('name')
+
+  // Add email filter if provided
+  if (businessEmail) {
+    query = query.eq('business_email', businessEmail)
+  }
+
+  const { data, error } = await query.order('name')
 
   if (error) {
     console.error('Error fetching all menu items:', error)
@@ -38,11 +44,16 @@ export async function getAllMenuItemsServer(): Promise<MenuItem[]> {
   return data || []
 }
 
-export async function createMenuItemServer(menuItem: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at'>): Promise<MenuItem | null> {
+export async function createMenuItemServer(menuItem: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at'>, businessEmail?: string): Promise<MenuItem | null> {
   const supabase = await getServerSupabaseClient()
+  const menuItemWithEmail = {
+    ...menuItem,
+    business_email: businessEmail
+  }
+  
   const { data, error } = await supabase
     .from('menu_item')
-    .insert(menuItem)
+    .insert(menuItemWithEmail)
     .select()
     .single()
 
@@ -87,7 +98,7 @@ export async function deleteMenuItemServer(menu_id: string): Promise<boolean> {
 }
 
 // Order Operations (Server-side)
-export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
+export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string, businessEmail?: string): Promise<Order | null> {
   try {
     const supabase = await getServerSupabaseClient()
     
@@ -96,6 +107,7 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
       .from('orders')
       .insert({
         customer_note: customerNote,
+        business_email: businessEmail,
         status: 'pending'
       })
       .select()
@@ -172,9 +184,9 @@ export async function getOrderByIdServer(order_id: number): Promise<Order | null
   return data as Order
 }
 
-export async function getAllOrdersServer(): Promise<Order[]> {
+export async function getAllOrdersServer(date?: string, businessEmail?: string): Promise<Order[]> {
   const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('orders')
     .select(`
       *,
@@ -183,7 +195,20 @@ export async function getAllOrdersServer(): Promise<Order[]> {
         menu_item(*)
       )
     `)
-    .order('created_at', { ascending: false })
+
+  // Add date filter if provided (expects YYYY-MM-DD format)
+  if (date) {
+    const startOfDay = `${date}T00:00:00.000Z`
+    const endOfDay = `${date}T23:59:59.999Z`
+    query = query.gte('created_at', startOfDay).lte('created_at', endOfDay)
+  }
+
+  // Add business email filter if provided
+  if (businessEmail) {
+    query = query.eq('business_email', businessEmail)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching orders:', error)

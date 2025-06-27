@@ -5,6 +5,7 @@ export interface MenuItem {
   availability: boolean;
   image_url?: string;
   description?: string;
+  business_email?: string;
   created_at: string;
   updated_at: string;
 }
@@ -15,6 +16,7 @@ export interface Order {
   total_amount: number;
   status: 'pending' | 'preparing' | 'done' | 'cancelled';
   customer_note?: string;
+  business_email?: string;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -58,5 +60,5 @@ export interface CartContextType {
   clearCart: () => void;
   total: number;
   itemCount: number;
-  createOrder: (customerNote?: string) => Promise<Order | null>;
+  createOrder: (customerNote?: string, businessEmail?: string) => Promise<Order | null>;
 }

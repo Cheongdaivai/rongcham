@@ -6,6 +6,7 @@ CREATE TABLE menu_item (
     availability BOOLEAN DEFAULT true,
     image_url TEXT,
     description TEXT,
+    business_email VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -17,6 +18,7 @@ CREATE TABLE orders (
     total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'done', 'cancelled')),
     customer_note TEXT,
+    business_email VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

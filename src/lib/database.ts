@@ -85,63 +85,27 @@ export async function deleteMenuItem(menu_id: string): Promise<boolean> {
 }
 
 // Order Operations
-export async function createOrder(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
+export async function createOrder(orderItems: { menu_id: string; quantity: number }[], customerNote?: string, businessEmail?: string): Promise<Order | null> {
   try {
-    const supabase = getSupabaseClient()
-    
-    // Start a transaction by creating the order first
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_note: customerNote,
-        status: 'pending'
-      })
-      .select()
-      .single()
-
-    if (orderError) {
-      console.error('Error creating order:', orderError)
-      return null
-    }
-
-    // Get menu items to calculate prices
-    const menuIds = orderItems.map(item => item.menu_id)
-    const { data: menuItems, error: menuError } = await supabase
-      .from('menu_item')
-      .select('menu_id, price')
-      .in('menu_id', menuIds)
-
-    if (menuError) {
-      console.error('Error fetching menu items for order:', menuError)
-      return null
-    }
-
-    // Create order items
-    const orderItemsToInsert = orderItems.map(item => {
-      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
-      if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
-      
-      return {
-        order_id: orderData.order_id,
-        menu_id: item.menu_id,
-        quantity: item.quantity,
-        unit_price: menuItem.price
-      }
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: orderItems,
+        customerNote,
+        businessEmail
+      }),
     })
 
-    const { error: orderItemsError } = await supabase
-      .from('order_item')
-      .insert(orderItemsToInsert)
-
-    if (orderItemsError) {
-      console.error('Error creating order items:', orderItemsError)
-      // Clean up the order if order items creation failed
-      await supabase.from('orders').delete().eq('order_id', orderData.order_id)
+    if (!response.ok) {
+      console.error('Error creating order:', response.statusText)
       return null
     }
 
-    // Fetch the complete order with items
-    return await getOrderById(orderData.order_id)
+    const { order } = await response.json()
+    return order
   } catch (error) {
     console.error('Error in createOrder:', error)
     return null
