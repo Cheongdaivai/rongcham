@@ -35,13 +35,13 @@ export function FoodItemCard({ item }: FoodItemCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative h-48 w-full">
+    <Card className="overflow-hidden rounded-none hover:shadow-lg transition-shadow border border-gray-200">
+      <div className="relative h-48 w-full rounded-none">
         <Image
           src={item.image}
           alt={item.name}
           fill
-          className="object-cover"
+          className="object-cover rounded-none"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         {!item.available && (
@@ -93,13 +93,14 @@ export function MenuItemCard({ menuItem }: MenuItemCardProps) {
     addItem(menuItem);
   };
 
-  return (    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative h-48 w-full">
+  return (
+    <Card className="overflow-hidden rounded-none hover:shadow-lg transition-shadow border border-gray-200">
+      <div className="relative h-48 w-full rounded-none">
         <Image
           src={menuItem.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'}
           alt={menuItem.name}
           fill
-          className="object-cover"
+          className="object-cover rounded-none"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         {!menuItem.availability && (
