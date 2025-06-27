@@ -23,7 +23,7 @@ export function Header() {
             </Button>
           </Link>
           
-          <Link href="/chef">
+          <Link href="/admin/dashboard">
             <Button variant="ghost" size="sm">
               <ChefHat className="h-4 w-4 mr-2" />
               Chef Dashboard
