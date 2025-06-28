@@ -4,13 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, CreditCard, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function CartDrawer() {
-  const { items, updateQuantity, removeItem, total, itemCount, clearCart, createOrder } = useCart();
+  const { items, updateQuantity, removeItem, total, itemCount, createOrder } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  const [prevItemCount, setPrevItemCount] = useState(0);
+
+  // Animation when items are added
+  useEffect(() => {
+    if (itemCount > prevItemCount && items.length > 0) {
+      const latestItem = items[items.length - 1];
+      setJustAdded(latestItem.menu_id);
+      setTimeout(() => setJustAdded(null), 2000);
+    }
+    setPrevItemCount(itemCount);
+  }, [itemCount, items, prevItemCount]);
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -18,7 +30,6 @@ export function CartDrawer() {
     setIsCheckingOut(true);
     
     try {
-      // Use the createOrder function from CartContext instead of manual API call
       const order = await createOrder();
       
       if (order) {
@@ -37,107 +48,158 @@ export function CartDrawer() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="relative border-gray-300 bg-white text-gray-900 hover:bg-gray-50 focus:ring-2 focus:ring-primary/30">
-          <ShoppingCart className="h-4 w-4" />
+        <Button 
+          variant="outline" 
+          size="sm"
+          className={`relative bg-white/90 backdrop-blur-sm hover:bg-white border-2 border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 font-semibold rounded-xl transition-all duration-300 px-3 sm:px-4 lg:px-6 shadow-lg hover:shadow-xl text-sm sm:text-base ${itemCount > 0 ? 'animate-glow' : ''}`}
+        >
+          <ShoppingCart className={`h-5 w-5 ${itemCount > 0 ? 'animate-bounce' : ''}`} />
           {itemCount > 0 && (
             <Badge 
-              variant="destructive" 
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-none p-0 flex items-center justify-center text-xs border border-white shadow"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs font-bold bg-gradient-to-r from-slate-800 to-slate-900 text-white border-2 border-white shadow-lg animate-bounce-in"
             >
               {itemCount}
             </Badge>
           )}
-          <span className="ml-2 hidden sm:inline font-semibold">
-            Cart <span className="text-primary">${total.toFixed(2)}</span>
+          <span className="ml-2 sm:ml-3 hidden sm:inline">
+            Cart <span className="text-slate-800 font-bold">${total.toFixed(2)}</span>
           </span>
+          {itemCount > 0 && (
+            <Sparkles className="h-3 w-3 text-yellow-500 ml-1 animate-pulse" />
+          )}
         </Button>
       </SheetTrigger>
       
-      <SheetContent className="w-full sm:max-w-lg rounded-none bg-white border-l border-gray-200 shadow-xl p-0">
-        <SheetHeader className="border-b border-gray-200 px-6 py-4">
-          <SheetTitle className="text-xl font-bold tracking-tight text-gray-900">Shopping Cart <span className="text-gray-400 font-normal">({itemCount} items)</span></SheetTitle>
+      <SheetContent className="w-full sm:max-w-lg bg-white/95 backdrop-blur-md border-l border-slate-200 shadow-2xl p-0 sm:rounded-l-3xl flex flex-col h-full">
+        <SheetHeader className="flex-shrink-0 border-b border-slate-200 px-6 py-6 bg-gradient-to-r from-slate-50 to-slate-100">
+          <SheetTitle className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl animate-float shadow-lg">
+              <ShoppingCart className="h-5 w-5 text-white" />
+            </div>
+            <span className="flex-1 text-xl font-bold text-slate-800">Shopping Cart</span>
+            <Badge className="bg-slate-800 text-white px-3 py-1 rounded-full font-semibold animate-pulse">
+              {itemCount} items
+            </Badge>
+          </SheetTitle>
         </SheetHeader>
         
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-auto py-4 px-6">
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                <ShoppingCart className="h-12 w-12 text-gray-300 mb-4" />
-                <p className="text-gray-400 text-lg">Your cart is empty</p>
+        <div className="flex-1 overflow-auto py-6 px-6 min-h-0">
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center py-16">
+              <div className="p-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-3xl mb-6 animate-float shadow-lg">
+                <ShoppingCart className="h-16 w-16 text-slate-400" />
               </div>
-            ) : (
-              <div className="space-y-6">                {items.map((item) => (
-                  <div key={item.menu_id} className="flex items-center gap-4 border-b border-gray-100 pb-5 last:border-b-0">
-                    <div className="relative h-16 w-16 rounded-none overflow-hidden bg-gray-100 border border-gray-200">
-                      <Image
-                        src={item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'}
-                        alt={item.name}
-                        fill
-                        className="object-cover rounded-none"
-                        sizes="64px"
-                      />
-                    </div>
+              <h3 className="text-xl font-semibold text-slate-600 mb-2">Your cart is empty</h3>
+              <p className="text-slate-500">Add some delicious items to get started!</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {items.map((item, index) => (
+                <div 
+                  key={item.menu_id} 
+                  className={`group flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-300 hover:shadow-lg transition-all duration-300 ${
+                    justAdded === item.menu_id ? 'animate-bounce-in border-green-300 bg-green-50' : ''
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Item image */}
+                  <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-md flex-shrink-0">
+                    <Image
+                      src={item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'}
+                      alt={item.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-300"
+                      sizes="80px"
+                    />
+                    {justAdded === item.menu_id && (
+                      <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                        <Sparkles className="h-6 w-6 text-green-600 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Item details */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-lg text-slate-800 truncate group-hover:text-slate-900 transition-colors">
+                      {item.name}
+                    </h4>
+                    <p className="text-sm text-slate-500 font-medium">${item.price.toFixed(2)} each</p>
                     
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-base text-gray-900 truncate">{item.name}</h4>
-                      <p className="text-xs text-gray-500">${item.price.toFixed(2)} each</p>
-                      <div className="flex items-center mt-2 gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 border-gray-300"
-                          onClick={() => updateQuantity(item.menu_id, item.quantity - 1)}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center font-semibold text-gray-800">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 border-gray-300"
-                          onClick={() => updateQuantity(item.menu_id, item.quantity + 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                    {/* Quantity controls */}
+                    <div className="flex items-center mt-3 gap-3">
+                      <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200 shadow-sm">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => removeItem(item.menu_id)}
+                          className="h-10 w-10 hover:bg-white rounded-lg hover:scale-110 transition-all duration-200 text-slate-700 hover:text-slate-900"
+                          onClick={() => updateQuantity(item.menu_id, item.quantity - 1)}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Minus className="h-5 w-5 font-bold" />
+                        </Button>
+                        <span className="w-12 text-center font-bold text-lg text-slate-800 bg-white rounded-lg mx-1 py-1 shadow-sm">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 hover:bg-white rounded-lg hover:scale-110 transition-all duration-200 text-slate-700 hover:text-slate-900"
+                          onClick={() => updateQuantity(item.menu_id, item.quantity + 1)}
+                        >
+                          <Plus className="h-5 w-5 font-bold" />
                         </Button>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg hover:scale-110 transition-all duration-200 shadow-sm"
+                        onClick={() => removeItem(item.menu_id)}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
                     </div>
-                    <div className="font-bold text-lg text-gray-900">
+                  </div>
+                  
+                  {/* Item total price */}
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-bold text-xl text-slate-800">
                       ${(item.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {items.length > 0 && (
-            <div className="border-t border-gray-200 pt-6 pb-8 px-6 bg-gray-50">
-              <div className="flex justify-between items-center text-lg font-bold mb-4">
-                <span className="text-gray-700">Total:</span>
-                <span className="text-primary">${total.toFixed(2)}</span>
-              </div>
-              
-              <Button 
-                onClick={handleCheckout}
-                disabled={isCheckingOut}
-                className="w-full h-12 text-lg font-bold bg-primary text-white hover:bg-primary/90 transition-colors duration-200 shadow-none border-none"
-                size="lg"
-              >
-                {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
-              </Button>
+                </div>
+              ))}
             </div>
           )}
         </div>
+        
+        {items.length > 0 && (
+          <div className="flex-shrink-0 border-t border-slate-200 pt-6 pb-6 px-6 bg-gradient-to-r from-slate-50 to-slate-100 animate-slide-up">
+            <div className="flex justify-between items-center text-2xl font-bold mb-6">
+              <span className="text-slate-700">Total:</span>
+              <span className="text-slate-800 bg-white px-4 py-2 rounded-xl shadow-lg animate-glow border border-slate-200">
+                ${total.toFixed(2)}
+              </span>
+            </div>
+            
+            <Button 
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+              className="w-full h-16 text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+              size="lg"
+            >
+              {isCheckingOut ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Processing...
+                </div>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5 mr-3" />
+                  Proceed to Checkout
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
