@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { signInWithEmail } from '@/lib/auth'
+import Link from 'next/link'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -19,15 +20,22 @@ export default function AdminLogin() {
     setError('')
 
     try {
+      // Basic validation
+      if (!email || !password) {
+        setError('Please enter both email and password')
+        return
+      }
+
       const { user, error } = await signInWithEmail(email, password)
       
       if (error) {
-        setError(error.message)
+        setError(error.message || 'Invalid login credentials')
       } else if (user) {
         router.push('/admin/dashboard')
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      console.error('Login error:', err)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -92,6 +100,24 @@ export default function AdminLogin() {
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
+            </div>
+
+            <div className="text-center space-y-2">
+              <Link 
+                href="/admin/forgot-password" 
+                className="text-blue-600 hover:text-blue-500 text-sm"
+              >
+                Forgot your password?
+              </Link>
+              <div className="text-sm text-gray-600">
+                Don't have an account?{' '}
+                <Link 
+                  href="/admin/register" 
+                  className="text-blue-600 hover:text-blue-500"
+                >
+                  Sign up
+                </Link>
+              </div>
             </div>
           </form>
         </Card>
