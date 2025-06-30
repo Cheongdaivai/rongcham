@@ -1,18 +1,17 @@
 'use client';
 
 import { CartDrawer } from './CartDrawer';
-import { Star, Clock, Crown, Award } from 'lucide-react';
 
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-lg border-b border-amber-200/50 shadow-2xl">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 sm:h-24">
-          {/* Minimal Logo */}
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-18 md:h-20 lg:h-24">
+          {/* Responsive Logo */}
           <div className="flex items-center">
             <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-800 rounded-2xl shadow-2xl flex items-center justify-center hover:scale-105 transition-all duration-500 border-4 border-white/20">
-                <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-10 sm:h-10 text-white fill-current filter drop-shadow-lg">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-800 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl flex items-center justify-center hover:scale-105 transition-all duration-500 border-2 sm:border-3 md:border-4 border-white/20">
+                <svg viewBox="0 0 100 100" className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-white fill-current filter drop-shadow-lg">
                   {/* Main temple structure */}
                   <rect x="10" y="70" width="80" height="8" />
                   {/* Central tower */}
@@ -32,13 +31,34 @@ export function Header() {
                   <rect x="5" y="75" width="90" height="3" />
                 </svg>
               </div>
-              {/* Elegant glowing effect */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 rounded-2xl opacity-30 blur-xl animate-pulse"></div>
+              {/* Responsive glowing effect */}
+              <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 rounded-xl sm:rounded-2xl opacity-20 sm:opacity-30 blur-lg sm:blur-xl animate-pulse"></div>
+            </div>
+            
+            {/* Responsive Brand Text - Hidden on mobile, visible on larger screens */}
+            <div className="hidden md:flex flex-col ml-3 lg:ml-4">
+              <div className="text-lg lg:text-xl xl:text-2xl font-bold bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">
+                RONGJAM
+              </div>
+              <div className="text-xs lg:text-sm text-slate-600 font-medium -mt-1">
+                Cambodian Cuisine
+              </div>
             </div>
           </div>
 
-          {/* Cart */}
-          <div className="flex items-center">
+          {/* Responsive Navigation & Cart */}
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* Mobile brand text - visible only on small screens */}
+            <div className="flex md:hidden flex-col text-right mr-2">
+              <div className="text-sm font-bold bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">
+                RONGJAM
+              </div>
+              <div className="text-xs text-slate-600 font-medium -mt-0.5">
+                Fine Dining
+              </div>
+            </div>
+            
+            {/* Cart Drawer */}
             <CartDrawer />
           </div>
         </div>

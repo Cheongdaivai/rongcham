@@ -1,7 +1,7 @@
 import { createClient } from './supabase/server'
 import { MenuItem, Order } from '@/types'
 
-// Server-side database functions
+// Server-side  functions
 async function getServerSupabaseClient() {
   return await createClient()
 }
@@ -89,6 +89,7 @@ export async function deleteMenuItemServer(menu_id: string): Promise<boolean> {
 // Order Operations (Server-side)
 export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
   try {
+    console.log('Creating order with items:', orderItems, 'customerNote:', customerNote)
     const supabase = await getServerSupabaseClient()
     
     // Start a transaction by creating the order first
@@ -103,11 +104,15 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
 
     if (orderError) {
       console.error('Error creating order:', orderError)
-      return null
+      throw new Error(` error creating order: ${orderError.message}`)
     }
+
+    console.log('Order created successfully:', orderData)
 
     // Get menu items to calculate prices
     const menuIds = orderItems.map(item => item.menu_id)
+    console.log('Fetching menu items for IDs:', menuIds)
+    
     const { data: menuItems, error: menuError } = await supabase
       .from('menu_item')
       .select('menu_id, price')
@@ -115,7 +120,13 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
 
     if (menuError) {
       console.error('Error fetching menu items for order:', menuError)
-      return null
+      throw new Error(` error fetching menu items: ${menuError.message}`)
+    }
+
+    console.log('Fetched menu items:', menuItems)
+
+    if (!menuItems || menuItems.length === 0) {
+      throw new Error('No menu items found for the provided IDs')
     }
 
     // Create order items
@@ -131,6 +142,8 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
       }
     })
 
+    console.log('Inserting order items:', orderItemsToInsert)
+
     const { error: orderItemsError } = await supabase
       .from('order_item')
       .insert(orderItemsToInsert)
@@ -139,14 +152,18 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
       console.error('Error creating order items:', orderItemsError)
       // Clean up the order if order items creation failed
       await supabase.from('orders').delete().eq('order_id', orderData.order_id)
-      return null
+      throw new Error(` error creating order items: ${orderItemsError.message}`)
     }
 
+    console.log('Order items created successfully')
+
     // Fetch the complete order with items
-    return await getOrderByIdServer(orderData.order_id)
+    const finalOrder = await getOrderByIdServer(orderData.order_id)
+    console.log('Final order with items:', finalOrder)
+    return finalOrder
   } catch (error) {
-    console.error('Error in createOrder:', error)
-    return null
+    console.error('Error in createOrderServer:', error)
+    throw error
   }
 }
 

@@ -59,53 +59,63 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
     }
   }, [onClose])
 
-  // Don't render on server or when not visible
-  if (!mounted || !isVisible) return null
+  // Always render when mounted if modal should be visible or is animating out
+  if (!mounted || (!isVisible && !isOpen)) return null
 
   const modalContent = (
     <div 
       className={`
-        fixed inset-0 z-[9999] flex items-center justify-center p-4
+        fixed inset-0 z-[9999] flex items-center justify-center 
+        p-2 sm:p-4 md:p-6 lg:p-8
         ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         transition-all duration-300 ease-out
+        overflow-y-auto
       `}
       onClick={handleBackdropClick}
     >
       {/* Backdrop */}
       <div 
         className={`
-          absolute inset-0 bg-black/70 backdrop-blur-md
+          fixed inset-0 bg-black/60 sm:bg-black/70 backdrop-blur-sm sm:backdrop-blur-md
           ${isOpen ? 'opacity-100' : 'opacity-0'}
           transition-opacity duration-300 ease-out
         `}
       />
       
-      {/* Modal Container - No Border Radius */}
+      {/* Modal Container - Responsive Sizing */}
       <div 
         className={`
-          relative bg-white shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden border border-slate-200
+          relative bg-white shadow-lg sm:shadow-xl md:shadow-2xl 
+          w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-xl xl:max-w-2xl
+          border border-slate-200 
           ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}
           transition-all duration-300 ease-out
+          my-auto mx-auto
+          max-h-[90vh] sm:max-h-[85vh] md:max-h-[90vh] lg:max-h-[95vh] 
+          flex flex-col
+          overflow-hidden
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - No Border Radius */}
+        {/* Header - Responsive */}
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
+          <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 lg:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex-shrink-0">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 truncate pr-2">
+              {title}
+            </h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-10 w-10 hover:bg-slate-100 transition-all duration-200 hover:scale-110 flex-shrink-0"
+              className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-11 lg:w-11 hover:bg-slate-100 transition-all duration-200 hover:scale-110 flex-shrink-0 rounded-lg sm:rounded-xl"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </Button>
           </div>
         )}
         
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        {/* Content - Responsive Padding */}
+        <div className="p-3 sm:p-4 md:p-5 lg:p-6 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
           {children}
         </div>
       </div>
