@@ -162,13 +162,12 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Premium Shimmer Animation */
 @keyframes shimmer {
   0% {
-    transform: translateX(-100%);
+    background-position: -200% 0;
   }
   100% {
-    transform: translateX(200%);
+    background-position: 200% 0;
   }
 }
 
@@ -202,7 +201,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .animate-shimmer {
-  animation: shimmer 2s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
 /* Luxury Hover Effects */
@@ -296,39 +297,13 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
-/* Glass morphism utilities */
-.backdrop-blur-xl {
-  backdrop-filter: blur(24px);
-}
-
-.backdrop-blur-3xl {
-  backdrop-filter: blur(64px);
-}
-
-/* Perspective for 3D transforms */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-/* Premium glass card effect */
-.glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-}
-
-/* Ultra-premium gradient text */
-.gradient-text-luxury {
-  background: linear-gradient(135deg, #b45309, #d97706, #f59e0b, #fbbf24);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Floating glow effect */
-.floating-glow {
-  filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.4));
+/* Premium Gradient Overlays */
+.gradient-luxury {
+  background: linear-gradient(135deg, 
+    rgba(251, 191, 36, 0.1) 0%, 
+    rgba(245, 158, 11, 0.15) 25%, 
+    rgba(217, 119, 6, 0.1) 50%, 
+    rgba(251, 191, 36, 0.05) 100%);
 }
 
 /* Luxury Shadow Effects */

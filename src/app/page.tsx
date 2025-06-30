@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { CartProvider, useCart } from "@/contexts/CartContext"
-import { Header } from "@/components/Header"
 import { StickyCart } from "@/components/StickyCart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Modal } from "@/components/ui/modal"
-import { Plus, Star, Clock, Award, Minus, ShoppingCart, Sparkles } from "lucide-react"
+import { Plus, Star, Clock, Award, Minus, ShoppingCart, Sparkles, Utensils, Wine, ChefHat } from "lucide-react"
 import { sampleMenuItems } from "@/data/foodItems"
 import type { MenuItem } from "@/types"
-import { Inter } from "next/font/google"
+import { Inter, Playfair_Display, Cormorant_Garamond } from "next/font/google"
 
 const inter = Inter({ subsets: ["latin"] })
+const playfair = Playfair_Display({ subsets: ["latin"] })
+const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] })
 
 export default function Home() {
   return (
@@ -46,188 +47,219 @@ function HomeContent() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Background Image with Minimal Overlay */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50 relative overflow-hidden">
+      {/* Luxurious Background Overlay */}
       <div className="fixed inset-0 z-0">
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&h=1080&fit=crop&crop=center')"
+            backgroundImage: "url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&h=1080&fit=crop&crop=center')"
           }}
         />
-        {/* Very light overlay to ensure text readability while preserving image colors */}
-        <div className="absolute inset-0 bg-white/20" />
+        {/* Elegant dark overlay for sophistication */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-amber-900/60" />
+        
+        {/* Floating golden particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-20 w-2 h-2 bg-amber-400 rounded-full animate-float opacity-30" style={{ animationDelay: '0s' }} />
+          <div className="absolute top-40 right-32 w-1 h-1 bg-yellow-300 rounded-full animate-float opacity-40" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-60 left-1/3 w-1.5 h-1.5 bg-amber-300 rounded-full animate-float opacity-35" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-40 right-20 w-2 h-2 bg-yellow-400 rounded-full animate-float opacity-25" style={{ animationDelay: '3s' }} />
+          <div className="absolute bottom-60 left-40 w-1 h-1 bg-amber-500 rounded-full animate-float opacity-30" style={{ animationDelay: '4s' }} />
+        </div>
       </div>
 
       {/* Content */}
       <div className="relative z-10">
-        <Header />
-        
-        {/* Hero Section */}
-        <section className="relative py-20 sm:py-24 lg:py-32 overflow-hidden">
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-white/10 to-white/5 rounded-full blur-3xl animate-float" />
-            <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-white/10 to-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-          </div>
-          
-          <div className="container relative">
-            <div className="text-center max-w-4xl mx-auto">
+        {/* Exquisite Hero Section with Side Layout */}
+        <section className="relative min-h-screen py-8 sm:py-12 lg:py-16 overflow-hidden flex items-center">
+          {/* Left Side - Brand and Description */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-center w-full">
+            <div className="lg:col-span-6 text-left px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20">
               <div className="animate-slide-up">
-                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-6 sm:mb-8 leading-tight drop-shadow-2xl">
-                  <span className="bg-gradient-to-r from-white via-slate-100 to-white bg-clip-text text-transparent">
-                    Delicious
+                <div className="flex items-center mb-8">
+                  <div className="h-px bg-gradient-to-r from-amber-400 to-transparent w-16" />
+                  <Sparkles className="h-6 w-6 text-amber-400 mx-4" />
+                </div>
+                <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-light text-white mb-8 leading-tight drop-shadow-2xl ${cormorant.className}`}>
+                  <span className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent">
+                    Exquisite Khmer Cuisine
                   </span>
-                  <br />
-                  <span className="text-white drop-shadow-lg">Khmer Cuisine</span>
                 </h1>
+                <div className="flex items-center mb-8">
+                  <div className="h-px bg-gradient-to-r from-amber-400 to-transparent w-24" />
+                  <div className="w-2 h-2 bg-amber-400 rounded-full mx-4" />
+                </div>
               </div>
               
               <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <p className="text-xl sm:text-2xl lg:text-3xl text-white max-w-3xl mx-auto mb-10 sm:mb-12 leading-relaxed drop-shadow-lg">
-                  Authentic Cambodian flavors crafted with passion, served with love. Experience the best of Cambodia right at your table.
+                <p className={`text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-amber-50 mb-4 leading-relaxed drop-shadow-lg font-light ${cormorant.className}`}>
+                  An artful symphony of authentic Cambodian flavors, meticulously crafted by our master chefs.
+                </p>
+                <p className={`text-lg sm:text-xl lg:text-2xl text-amber-200 mb-12 leading-relaxed ${cormorant.className}`}>
+                  Where tradition meets culinary excellence.
                 </p>
               </div>
-              
-              {/* Features */}
-              <div className="animate-slide-up flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16 mb-10 sm:mb-12" style={{ animationDelay: '0.4s' }}>
-                <div className="flex items-center gap-3 group hover:scale-105 transition-transform duration-300">
-                  <div className="p-3 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
-                    <Star className="h-6 w-6 text-white" />
+
+              {/* Menu Indicator */}
+              <div className="animate-slide-up" style={{ animationDelay: '0.8s' }}>
+                <button 
+                  onClick={() => {
+                    document.getElementById('menu-section')?.scrollIntoView({ 
+                      behavior: 'smooth',
+                      block: 'start'
+                    });
+                  }}
+                  className="flex items-center gap-4 bg-white/10 backdrop-blur-lg px-6 py-3 rounded-full border border-white/20 shadow-2xl hover:shadow-white/20 transition-all duration-500 cursor-pointer group hover:bg-white/20"
+                >
+                  <div className="relative">
+                    <span className="w-3 h-3 bg-emerald-400 rounded-full block animate-pulse" />
+                    <span className="absolute inset-0 w-3 h-3 bg-emerald-300 rounded-full animate-ping" />
                   </div>
-                  <span className="text-white font-semibold text-lg drop-shadow-md">4.9 Rating</span>
-                </div>
-                <div className="flex items-center gap-3 group hover:scale-105 transition-transform duration-300">
-                  <div className="p-3 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
-                    <Clock className="h-6 w-6 text-white" />
+                  <span className={`text-white font-medium text-base ${cormorant.className}`}>Explore our exquisite menu</span>
+                  <div className="transform group-hover:translate-y-1 transition-transform duration-300">
+                    <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
                   </div>
-                  <span className="text-white font-semibold text-lg drop-shadow-md">Fast Delivery</span>
-                </div>
-                <div className="flex items-center gap-3 group hover:scale-105 transition-transform duration-300">
-                  <div className="p-3 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
-                    <Award className="h-6 w-6 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Right Side - Features */}
+            <div className="lg:col-span-6 space-y-8 px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20">
+              <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                <div className="flex items-center gap-4 group hover:scale-105 transition-all duration-500 justify-end">
+                  <div className="text-right">
+                    <span className={`text-white font-medium text-xl drop-shadow-md block ${cormorant.className}`}>5-Star Rating</span>
+                    <span className="text-amber-200 text-sm opacity-90">Michelin Recommended</span>
                   </div>
-                  <span className="text-white font-semibold text-lg drop-shadow-md">Premium Quality</span>
+                  <div className="p-4 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full shadow-2xl group-hover:shadow-amber-500/30 transition-all duration-500">
+                    <Star className="h-7 w-7 text-white" />
+                  </div>
                 </div>
               </div>
               
-              {/* Status Badge */}
-              <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
-                <div className="inline-flex items-center gap-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="relative">
-                    <span className="w-3 h-3 bg-green-500 rounded-full block animate-pulse" />
-                    <span className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-ping" />
+              <div className="animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                <div className="flex items-center gap-4 group hover:scale-105 transition-all duration-500 justify-end">
+                  <div className="text-right">
+                    <span className={`text-white font-medium text-xl drop-shadow-md block ${cormorant.className}`}>Master Chefs</span>
+                    <span className="text-amber-200 text-sm opacity-90">Culinary Artists</span>
                   </div>
-                  <span className="text-slate-700 font-medium">Fresh ingredients • Made to order</span>
-                  <Sparkles className="h-4 w-4 text-yellow-500 animate-pulse" />
+                  <div className="p-4 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-full shadow-2xl group-hover:shadow-slate-500/30 transition-all duration-500">
+                    <ChefHat className="h-7 w-7 text-white" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
+                <div className="flex items-center gap-4 group hover:scale-105 transition-all duration-500 justify-end">
+                  <div className="text-right">
+                    <span className={`text-white font-medium text-xl drop-shadow-md block ${cormorant.className}`}>Premium Quality</span>
+                    <span className="text-amber-200 text-sm opacity-90">Finest Ingredients</span>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 rounded-full shadow-2xl group-hover:shadow-emerald-500/30 transition-all duration-500">
+                    <Award className="h-7 w-7 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Elegant Status Badge */}
+              <div className="animate-slide-up flex justify-end" style={{ animationDelay: '0.7s' }}>
+                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-lg px-6 py-4 rounded-full border border-white/20 shadow-2xl">
+                  <span className={`text-white font-medium text-sm ${cormorant.className}`}>Fresh • À la minute • Excellence</span>
+                  <div className="relative">
+                    <span className="w-3 h-3 bg-emerald-400 rounded-full block animate-pulse" />
+                    <span className="absolute inset-0 w-3 h-3 bg-emerald-300 rounded-full animate-ping" />
+                  </div>
+                  <Wine className="h-5 w-5 text-amber-400 animate-pulse" />
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Clean Single Marquee Section */}
-        <div className="relative bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white py-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+        {/* Sophisticated Marquee Section */}
+        <div className="relative bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 text-white py-8 overflow-hidden border-y border-amber-700/50">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-600/20 to-transparent" />
           <div className="relative flex animate-marquee whitespace-nowrap">
-            <span className={`mx-12 text-xl font-bold flex items-center gap-3 ${inter.className}`}>
-              <Sparkles className="h-5 w-5 text-yellow-400" />
-              Authentic Khmer Cuisine • Fresh Daily Specials • Premium Quality Ingredients • Fast Delivery Service
-              <Sparkles className="h-5 w-5 text-yellow-400" />
+            <span className={`mx-16 text-2xl font-light flex items-center gap-4 ${cormorant.className}`}>
+              <Sparkles className="h-6 w-6 text-amber-300" />
+              Fine Dining Excellence • Authentic Cambodian Heritage • Artisanal Culinary Craft • Premium Service
+              <Sparkles className="h-6 w-6 text-amber-300" />
             </span>
-            <span className={`mx-12 text-xl font-bold flex items-center gap-3 ${inter.className}`}>
-              <Sparkles className="h-5 w-5 text-yellow-400" />
-              Authentic Khmer Cuisine • Fresh Daily Specials • Premium Quality Ingredients • Fast Delivery Service
-              <Sparkles className="h-5 w-5 text-yellow-400" />
+            <span className={`mx-16 text-2xl font-light flex items-center gap-4 ${cormorant.className}`}>
+              <Sparkles className="h-6 w-6 text-amber-300" />
+              Fine Dining Excellence • Authentic Cambodian Heritage • Artisanal Culinary Craft • Premium Service
+              <Sparkles className="h-6 w-6 text-amber-300" />
             </span>
           </div>
         </div>
 
-        {/* Menu Section with Light Background */}
-        <section className="relative py-20 sm:py-24 lg:py-32 bg-white/90 backdrop-blur-sm">
+        {/* Refined Menu Section */}
+        <section id="menu-section" className="relative py-24 sm:py-32 lg:py-40 bg-gradient-to-br from-white via-slate-50 to-amber-50">
           <div className="container">
-            <div className="text-center mb-16 sm:mb-20">
+            <div className="text-center mb-20 sm:mb-24">
               <div className="animate-slide-up">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 font-display">
-                  Our Menu
+                <div className="flex items-center justify-center mb-8">
+                  <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent w-32" />
+                  <Utensils className="h-6 w-6 text-amber-600 mx-4" />
+                  <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent w-32" />
+                </div>
+                <h2 className={`text-5xl sm:text-6xl lg:text-7xl font-light text-slate-900 mb-8 ${cormorant.className}`}>
+                  <span className="bg-gradient-to-r from-slate-800 via-slate-900 to-amber-800 bg-clip-text text-transparent">
+                    Carte du Chef
+                  </span>
                 </h2>
-                <p className="text-xl sm:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-body">
-                  Discover our carefully curated selection of authentic Khmer dishes
+                <p className={`text-xl sm:text-2xl text-slate-600 max-w-4xl mx-auto leading-relaxed font-light ${cormorant.className}`}>
+                  Each dish tells a story of Cambodia's rich culinary heritage, reimagined with contemporary finesse
                 </p>
+                <div className="flex items-center justify-center mt-8">
+                  <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent w-24" />
+                  <div className="w-2 h-2 bg-amber-600 rounded-full mx-4" />
+                  <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent w-24" />
+                </div>
               </div>
             </div>
 
-            {/* Responsive 3D Rotating Cube with RONGJAM Logo */}
-            <div className="flex justify-center mb-16 sm:mb-20">
+            {/* Premium Logo Display */}
+            <div className="flex justify-center mb-20 sm:mb-24">
               <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <div className="relative cube-3d-container">
-                  {/* 3D Cube with 6 faces */}
-                  <div className="cube-3d w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 border-4 border-white shadow-2xl cursor-pointer">
+                <div className="relative">
+                  {/* Luxurious 3D Logo */}
+                  <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-amber-600 to-amber-800 rounded-full shadow-2xl border-8 border-white/20 backdrop-blur-sm">
+                      <div className="absolute inset-4 bg-gradient-to-br from-amber-500 via-amber-700 to-amber-900 rounded-full flex items-center justify-center">
+                        <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 text-white fill-current">
+                          <rect x="10" y="70" width="80" height="8" />
+                          <rect x="45" y="30" width="10" height="40" />
+                          <polygon points="45,30 50,20 55,30" />
+                          <rect x="25" y="45" width="8" height="25" />
+                          <polygon points="25,45 29,38 33,45" />
+                          <rect x="67" y="45" width="8" height="25" />
+                          <polygon points="67,45 71,38 75,45" />
+                          <rect x="15" y="55" width="6" height="15" />
+                          <polygon points="15,55 18,50 21,55" />
+                          <rect x="79" y="55" width="6" height="15" />
+                          <polygon points="79,55 82,50 85,55" />
+                          <rect x="5" y="75" width="90" height="3" />
+                        </svg>
+                      </div>
+                    </div>
                     
-                    {/* Front Face */}
-                    <div className="cube-face cube-face-front bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 border-4 border-white flex items-center justify-center">
-                      <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 text-white fill-current">
-                        <rect x="10" y="70" width="80" height="8" />
-                        <rect x="45" y="30" width="10" height="40" />
-                        <polygon points="45,30 50,20 55,30" />
-                        <rect x="25" y="45" width="8" height="25" />
-                        <polygon points="25,45 29,38 33,45" />
-                        <rect x="67" y="45" width="8" height="25" />
-                        <polygon points="67,45 71,38 75,45" />
-                        <rect x="15" y="55" width="6" height="15" />
-                        <polygon points="15,55 18,50 21,55" />
-                        <rect x="79" y="55" width="6" height="15" />
-                        <polygon points="79,55 82,50 85,55" />
-                        <rect x="5" y="75" width="90" height="3" />
-                      </svg>
-                    </div>
-
-                    {/* Back Face */}
-                    <div className="cube-face cube-face-back bg-gradient-to-br from-amber-700 via-amber-800 to-amber-900 border-4 border-white flex items-center justify-center">
-                      <div className="text-white font-bold text-xs sm:text-sm md:text-base lg:text-lg text-center">
-                        <div>RONGJAM</div>
-                        <div className="text-xs opacity-80">Restaurant</div>
-                      </div>
-                    </div>
-
-                    {/* Right Face */}
-                    <div className="cube-face cube-face-right bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border-4 border-white flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-white" />
-                    </div>
-
-                    {/* Left Face */}
-                    <div className="cube-face cube-face-left bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border-4 border-white flex items-center justify-center">
-                      <Star className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-white" />
-                    </div>
-
-                    {/* Top Face */}
-                    <div className="cube-face cube-face-top bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border-4 border-white flex items-center justify-center">
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-white rounded-full"></div>
-                    </div>
-
-                    {/* Bottom Face */}
-                    <div className="cube-face cube-face-bottom bg-gradient-to-br from-amber-800 via-amber-900 to-amber-950 border-4 border-white flex items-center justify-center">
-                      <div className="text-white font-bold text-xs sm:text-sm md:text-base">⚡</div>
-                    </div>
-
-                    {/* Decorative corners on front face */}
-                    <div className="absolute -top-1 -left-1 w-3 h-3 bg-gradient-to-br from-yellow-400 to-yellow-500 transform rotate-45 z-10"></div>
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-yellow-400 to-yellow-500 transform rotate-45 z-10"></div>
-                    <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-br from-yellow-400 to-yellow-500 transform rotate-45 z-10"></div>
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-gradient-to-br from-yellow-400 to-yellow-500 transform rotate-45 z-10"></div>
-                  </div>
-                  
-                  {/* Enhanced Glow effect */}
-                  <div className="absolute -inset-4 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 opacity-20 blur-2xl animate-pulse"></div>
-                  
-                  {/* Brand text below cube */}
-                  <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                    <div className="text-center">
-                      <div className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent font-display">
-                        RONGJAM
-                      </div>
-                      <div className="text-xs sm:text-sm text-slate-600 font-medium font-body">
-                        Authentic Khmer Cuisine
+                    {/* Elegant Glow Effects */}
+                    <div className="absolute -inset-8 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 opacity-20 blur-3xl animate-pulse rounded-full"></div>
+                    <div className="absolute -inset-4 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 opacity-30 blur-xl animate-pulse rounded-full"></div>
+                    
+                    {/* Brand Typography */}
+                    <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                      <div className="text-center">
+                        <div className={`text-3xl sm:text-4xl md:text-5xl font-light bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent ${cormorant.className}`}>
+                          RONGJAM
+                        </div>
+                        <div className={`text-base sm:text-lg text-slate-600 font-light mt-2 ${cormorant.className}`}>
+                          Fine Cambodian Cuisine
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -235,7 +267,8 @@ function HomeContent() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            {/* Elegant Menu Grid - Wider Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
               {menuItems.map((item, index) => (
                 <div 
                   key={item.menu_id} 
@@ -308,130 +341,213 @@ function MenuItemCard({ item }: { item: MenuItem }) {
 
   return (
     <>
-      <Card className="group overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/95 backdrop-blur-sm hover:-translate-y-2 hover:scale-105">
-        {/* Image Container */}
-        <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
-          <img
-            src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=350&fit=crop"}
-            alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      {/* Ultra-Premium Expanded Menu Card with Glassmorphism */}
+      <div className="group relative overflow-hidden transition-all duration-700 hover:-translate-y-4 hover:scale-[1.02] perspective-1000 min-h-[600px] sm:min-h-[650px] lg:min-h-[700px]">
+        {/* Floating Glow Effect */}
+        <div className="absolute -inset-8 bg-gradient-to-r from-amber-300/20 via-amber-400/30 to-amber-500/20 blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-1000 animate-pulse"></div>
+        
+        {/* Main Card Container */}
+        <div className="relative bg-white/85 backdrop-blur-xl border border-white/30 shadow-2xl hover:shadow-amber-500/25 transition-all duration-700 overflow-hidden h-full flex flex-col">
+          {/* Luxury Background Pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #f59e0b 2px, #f59e0b 4px)`,
+            }}></div>
+          </div>
           
-          {!item.availability && (
-            <div className="absolute inset-0 bg-black/70 flex items-center justify-center backdrop-blur-sm">
-              <Badge className="bg-red-500 text-white px-4 py-2 text-sm font-semibold shadow-lg">
-                Out of Stock
-              </Badge>
+          {/* Cinematic Image Container - Larger */}
+          <div className="relative h-80 sm:h-96 lg:h-[420px] overflow-hidden flex-shrink-0">
+            <img
+              src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=600&fit=crop"}
+              alt={item.name}
+              className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000 filter brightness-105 contrast-110 saturate-110"
+              loading="lazy"
+            />
+            
+            {/* Cinematic Overlay Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
+            
+            {/* Premium Floating Badges */}
+            <div className="absolute top-4 left-4 space-y-2">
+              {/* Chef's Signature */}
+              <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white px-3 py-1.5 text-xs font-bold tracking-wider shadow-2xl border border-amber-300/30 backdrop-blur-sm">
+                <div className="flex items-center gap-1.5">
+                  <ChefHat className="h-3 w-3" />
+                  <span className={cormorant.className}>CHEF'S SIGNATURE</span>
+                </div>
+              </div>
+              
+              {/* 5-Star Rating */}
+              <div className="bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1.5 shadow-xl border border-white/40">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Ultra-Premium Price Display */}
+            <div className="absolute top-4 right-4">
+              <div className="relative group/price">
+                <div className="bg-gradient-to-br from-white via-white to-amber-50 backdrop-blur-xl px-6 py-4 shadow-2xl border-2 border-amber-200/50 relative overflow-hidden">
+                  {/* Decorative corners */}
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-amber-400"></div>
+                  <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-amber-400"></div>
+                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-amber-400"></div>
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-amber-400"></div>
+                  
+                  <div className="relative z-10">
+                    <div className={`text-xs text-slate-600 font-medium tracking-wider mb-1 ${cormorant.className}`}>PRICE</div>
+                    <div className={`text-2xl font-bold text-slate-900 ${cormorant.className}`}>${item.price.toFixed(2)}</div>
+                  </div>
+                  
+                  {/* Luxury shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/20 to-transparent opacity-0 group-hover/price:opacity-100 transition-opacity duration-500 group-hover/price:animate-shimmer"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Artisan Badge */}
+            <div className="absolute bottom-4 left-4">
+              <div className="bg-slate-900/90 backdrop-blur-sm text-amber-300 px-4 py-2 text-sm font-medium shadow-xl border border-amber-300/30">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span className={cormorant.className}>Artisan Crafted</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Availability Overlay */}
+            {!item.availability && (
+              <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center z-30">
+                <div className="text-center space-y-4">
+                  <div className="bg-red-600/90 backdrop-blur-sm text-white px-8 py-4 text-lg font-bold shadow-2xl border-2 border-red-400/50">
+                    <Clock className="h-6 w-6 mx-auto mb-2" />
+                    <div className={cormorant.className}>Temporarily Unavailable</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           
-          <div className="absolute top-4 right-4">
-            <div className="bg-white/95 backdrop-blur-sm px-3 py-2 shadow-lg text-slate-900 font-bold text-lg border border-white/20">
-              ${item.price.toFixed(2)}
+          {/* Sophisticated Content Section - Expanded */}
+          <div className="relative p-6 sm:p-8 lg:p-10 space-y-6 bg-gradient-to-br from-white via-white to-amber-50/30 flex-grow flex flex-col">
+            {/* Title with Elegant Typography */}
+            <div className="flex-shrink-0">
+              <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 group-hover:text-amber-800 transition-colors duration-500 leading-tight ${cormorant.className}`}>
+                {item.name}
+              </h3>
+              <div className="h-px bg-gradient-to-r from-amber-400 via-amber-300 to-transparent w-2/3"></div>
+            </div>
+            
+            {/* Refined Description */}
+            <div className="flex-grow">
+              <p className={`text-slate-700 text-lg sm:text-xl leading-relaxed font-light ${inter.className}`}>
+                {item.description}
+              </p>
+            </div>
+
+            {/* Always Visible Add to Cart Button */}
+            <div className="pt-6 flex-shrink-0">
+              <Button
+                onClick={handleAddToCartClick}
+                disabled={!item.availability}
+                className="w-full bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-amber-800 hover:via-amber-700 hover:to-amber-800 text-white font-bold py-6 sm:py-8 px-6 sm:px-8 text-lg sm:text-xl shadow-2xl hover:shadow-amber-500/30 transition-all duration-500 border-2 border-slate-700 hover:border-amber-600 relative overflow-hidden group/btn disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95"
+              >
+                {/* Button shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 group-hover/btn:animate-shimmer"></div>
+                
+                <div className="relative z-10 flex items-center justify-center gap-4">
+                  <Plus className="w-6 h-6 sm:w-7 sm:h-7 group-hover/btn:rotate-90 transition-transform duration-300" />
+                  <span className={`${cormorant.className} tracking-wide font-bold`}>Add to Selection</span>
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                </div>
+              </Button>
             </div>
           </div>
         </div>
-        
-        <CardHeader className="p-5">
-          <CardTitle className="text-lg lg:text-xl font-bold text-slate-900 mb-2 group-hover:text-slate-700 transition-colors leading-tight">
-            {item.name}
-          </CardTitle>
-          <CardDescription className="text-slate-600 text-sm lg:text-base leading-relaxed line-clamp-2">
-            {item.description}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="p-5 pt-0">
-          <Button
-            onClick={handleAddToCartClick}
-            disabled={!item.availability}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 text-sm lg:text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add to Cart
-          </Button>
-        </CardContent>
-      </Card>
+      </div>
 
-      {/* Enhanced Add to Cart Modal with Rectangle Item Display */}
+      {/* Luxurious Add to Cart Modal */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal}
-        title="Add to Cart"
+        title="Add to Your Selection"
       >
-        <div className="space-y-6 animate-fade-in">
-          {/* Rectangle Item Display - Like the image you showed */}
-          <div className="flex gap-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 animate-slide-up">
-            <div className="w-24 h-16 overflow-hidden bg-slate-200 flex-shrink-0 shadow-sm">
+        <div className="space-y-8 animate-fade-in">
+          {/* Premium Item Display */}
+          <div className="flex gap-6 p-6 bg-gradient-to-r from-slate-50 via-white to-amber-50 border border-slate-200 shadow-inner animate-slide-up">
+            <div className="w-32 h-24 overflow-hidden bg-slate-200 flex-shrink-0 shadow-lg border border-slate-300 relative">
               <img
                 src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop"}
                 alt={item.name}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <h3 className="text-lg font-bold text-slate-900 mb-1 truncate font-display">{item.name}</h3>
-              <p className="text-slate-600 text-sm line-clamp-1 mb-2 font-body">{item.description}</p>
+              <h3 className={`text-2xl font-medium text-slate-900 mb-2 truncate ${cormorant.className}`}>{item.name}</h3>
+              <p className={`text-slate-600 text-base line-clamp-2 mb-3 ${inter.className}`}>{item.description}</p>
               <div className="flex items-center justify-between">
-                <p className="text-xl font-bold text-slate-900 font-body">${item.price.toFixed(2)}</p>
-                <span className="text-xs text-slate-500 bg-slate-200 px-2 py-1 font-medium font-body">
-                  Per item
+                <p className={`text-2xl font-bold text-slate-900 ${cormorant.className}`}>${item.price.toFixed(2)}</p>
+                <span className={`text-sm text-slate-500 bg-slate-200 px-3 py-1.5 font-medium ${inter.className}`}>
+                  Per serving
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Quantity Selector with Enhanced Animation */}
-          <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <label className="text-lg font-semibold text-slate-900 block font-display">Select Quantity</label>
-            <div className="flex items-center justify-center gap-4 bg-slate-50 py-6 border border-slate-200">
+          {/* Elegant Quantity Selector */}
+          <div className="space-y-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <label className={`text-2xl font-medium text-slate-900 block ${cormorant.className}`}>Select Quantity</label>
+            <div className="flex items-center justify-center gap-6 bg-gradient-to-r from-slate-50 to-amber-50 py-8 border border-slate-200 shadow-inner">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={decrementQuantity}
                 disabled={quantity <= 1}
-                className="h-12 w-12 border-2 border-slate-300 hover:border-slate-900 hover:bg-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110"
+                className="h-14 w-14 border-2 border-slate-300 hover:border-amber-600 hover:bg-amber-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 shadow-lg"
               >
-                <Minus className="h-5 w-5" />
+                <Minus className="h-6 w-6" />
               </Button>
               <div className="flex flex-col items-center">
-                <span className="text-4xl font-bold text-slate-900 bg-white py-3 px-8 border border-slate-200 min-w-[6rem] text-center font-body">
+                <span className={`text-5xl font-medium text-slate-900 bg-white py-4 px-10 border-2 border-slate-200 min-w-[8rem] text-center shadow-lg ${cormorant.className}`}>
                   {quantity}
                 </span>
-                <span className="text-xs text-slate-500 mt-2 font-body">Quantity</span>
+                <span className={`text-sm text-slate-500 mt-3 ${inter.className}`}>Quantity</span>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={incrementQuantity}
-                className="h-12 w-12 border-2 border-slate-300 hover:border-slate-900 hover:bg-white transition-all duration-200 hover:scale-110"
+                className="h-14 w-14 border-2 border-slate-300 hover:border-amber-600 hover:bg-amber-50 transition-all duration-300 hover:scale-110 shadow-lg"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-6 w-6" />
               </Button>
             </div>
           </div>
 
-          {/* Total Price Display */}
-          <div className="bg-gradient-to-r from-slate-100 to-slate-200 p-6 border border-slate-200 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="flex justify-between items-center">
-              <span className="text-xl font-semibold text-slate-700 font-display">Total:</span>
-              <span className="text-3xl font-bold text-slate-900 font-body">${(item.price * quantity).toFixed(2)}</span>
+          {/* Luxurious Total Display */}
+          <div className="bg-gradient-to-r from-amber-50 via-white to-amber-100 p-8 border-2 border-amber-200 shadow-xl animate-slide-up relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-100/50 to-transparent opacity-50"></div>
+            <div className="relative flex justify-between items-center">
+              <span className={`text-2xl font-medium text-slate-700 ${cormorant.className}`}>Total Amount:</span>
+              <span className={`text-4xl font-bold text-slate-900 ${cormorant.className}`}>${(item.price * quantity).toFixed(2)}</span>
             </div>
           </div>
 
-          {/* Action Buttons with Enhanced Animation */}
-          <div className="flex gap-4 pt-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          {/* Premium Action Buttons */}
+          <div className="flex gap-6 pt-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <Button
               type="button"
               variant="outline"
               onClick={handleCloseModal}
               disabled={isAddingToCart}
-              className="flex-1 h-14 border-2 border-slate-300 hover:border-slate-900 text-lg font-semibold transition-all duration-200 disabled:opacity-50 hover:scale-105 font-body"
+              className={`flex-1 h-16 border-2 border-slate-300 hover:border-slate-600 text-lg font-medium transition-all duration-300 disabled:opacity-50 hover:scale-105 shadow-lg ${cormorant.className}`}
             >
               Cancel
             </Button>
@@ -439,17 +555,18 @@ function MenuItemCard({ item }: { item: MenuItem }) {
               type="button"
               onClick={handleConfirmAddToCart}
               disabled={isAddingToCart}
-              className="flex-1 h-14 bg-slate-900 hover:bg-slate-800 text-white transition-all duration-300 text-lg font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 font-body"
+              className={`flex-1 h-16 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white transition-all duration-500 text-lg font-medium shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 relative overflow-hidden group/btn ${cormorant.className}`}
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 group-hover/btn:opacity-20 transition-opacity duration-500"></div>
               {isAddingToCart ? (
-                <div className="flex items-center gap-3 animate-bounce-in">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin"></div>
-                  <span className="font-body">Adding...</span>
+                <div className="flex items-center gap-4 animate-bounce-in">
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent animate-spin"></div>
+                  <span>Adding to Selection...</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <ShoppingCart className="w-5 h-5" />
-                  <span className="font-body">Add {quantity} to Cart</span>
+                <div className="flex items-center gap-4">
+                  <ShoppingCart className="w-6 h-6" />
+                  <span>Add {quantity} to Selection</span>
                 </div>
               )}
             </Button>
