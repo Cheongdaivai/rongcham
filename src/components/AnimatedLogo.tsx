@@ -1,7 +1,6 @@
 "use client"
 
-import { useAnimationFrame } from "motion/react"
-import { useRef } from "react"
+import { useRef, useEffect } from "react"
 
 interface AnimatedLogoProps {
   className?: string
@@ -11,20 +10,34 @@ interface AnimatedLogoProps {
 export default function AnimatedLogo({ className = "", size = "lg" }: AnimatedLogoProps) {
   const cubeRef = useRef<HTMLDivElement>(null)
 
-  useAnimationFrame((t) => {
-    if (!cubeRef.current) return
+  useEffect(() => {
+    let animationId: number
 
-    // Clean, fast rotation like the reference cube
-    const rotateX = Math.sin(t / 10000) * 200
-    const rotateY = (1 + Math.sin(t / 1000)) * -50
-    const rotateZ = Math.sin(t / 8000) * 100
+    const animate = (time: number) => {
+      if (!cubeRef.current) return
 
-    cubeRef.current.style.transform = `
-      translateY(${rotateY}px) 
-      rotateX(${rotateX}deg) 
-      rotateY(${rotateZ}deg)
-    `
-  })
+      // Clean, fast rotation like the reference cube
+      const rotateX = Math.sin(time / 10000) * 200
+      const rotateY = (1 + Math.sin(time / 1000)) * -50
+      const rotateZ = Math.sin(time / 8000) * 100
+
+      cubeRef.current.style.transform = `
+        translateY(${rotateY}px) 
+        rotateX(${rotateX}deg) 
+        rotateY(${rotateZ}deg)
+      `
+
+      animationId = requestAnimationFrame(animate)
+    }
+
+    animationId = requestAnimationFrame(animate)
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+    }
+  }, [])
 
   // Angkor Wat logo with Cambodian flag colors
   const AngkorWatLogo = () => (
