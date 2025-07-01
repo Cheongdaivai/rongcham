@@ -43,7 +43,7 @@ export async function getAllMenuItemsServer(businessEmail?: string): Promise<Men
   const supabase = await getServerSupabaseClient()
   
   // This will return only items the user has access to via RLS
-  const { data, error } = await supabase
+  let query = supabase
     .from('menu_item')
     .select('*')
 

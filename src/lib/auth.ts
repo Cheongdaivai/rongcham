@@ -126,7 +126,7 @@ export async function updatePassword(newPassword: string) {
 export async function resetPasswordWithOTP(email: string) {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/admin/reset-password-otp`,
+      redirectTo: `${window.location.origin}/admin/reset-password`,
     })
 
     if (error) {

@@ -26,8 +26,9 @@ export async function POST(request: NextRequest) {
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Order items are required' }, { status: 400 })
     }
+    const CustomerEmail = user.email
 
-    if (!businessEmail) {
+    if (!CustomerEmail) {
       return NextResponse.json({ error: 'Business email is required to identify which business the order belongs to' }, { status: 400 })
     }
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       quantity: item.quantity
     }))
 
-    const order = await createOrderServer(orderItems, customerNote, businessEmail)
+    const order = await createOrderServer(orderItems, customerNote, CustomerEmail)
     
     if (!order) {
       return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })

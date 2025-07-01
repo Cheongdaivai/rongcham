@@ -197,8 +197,8 @@ export async function createOrder(orderItems: { menu_id: string; quantity: numbe
       return null
     }
 
-    const { order } = await response.json()
-    return order
+    // Fetch the complete order with items
+    return await getOrderById(orderData.order_id)
   } catch (error) {
     console.error('Error in createOrder:', error)
     return null
