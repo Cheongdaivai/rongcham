@@ -60,5 +60,5 @@ export interface CartContextType {
   clearCart: () => void;
   total: number;
   itemCount: number;
-  createOrder: (customerNote?: string) => Promise<Order | null>;
+  createOrder: (customerNote?: string, businessEmail?: string) => Promise<Order | null>;
 }

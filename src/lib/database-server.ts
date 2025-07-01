@@ -39,14 +39,20 @@ export async function getMenuItemsServer(): Promise<MenuItem[]> {
   return data || []
 }
 
-export async function getAllMenuItemsServer(): Promise<MenuItem[]> {
+export async function getAllMenuItemsServer(businessEmail?: string): Promise<MenuItem[]> {
   const supabase = await getServerSupabaseClient()
   
   // This will return only items the user has access to via RLS
   const { data, error } = await supabase
     .from('menu_item')
     .select('*')
-    .order('name')
+
+  // Add email filter if provided
+  if (businessEmail) {
+    query = query.eq('business_email', businessEmail)
+  }
+
+  const { data, error } = await query.order('name')
 
   if (error) {
     console.error('Error fetching all menu items:', error)
@@ -152,7 +158,7 @@ export async function deleteMenuItemServer(menu_id: string): Promise<boolean> {
 }
 
 // Order Operations (Server-side)
-export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
+export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string, businessEmail?: string): Promise<Order | null> {
   try {
     // Ensure user is authenticated
     await getCurrentUser()
@@ -165,6 +171,7 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
       .from('orders')
       .insert({
         customer_note: customerNote,
+        business_email: businessEmail,
         status: 'pending'
       })
       .select()

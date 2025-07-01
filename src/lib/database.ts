@@ -138,7 +138,7 @@ export async function deleteMenuItem(menu_id: string): Promise<boolean> {
 }
 
 // Order Operations
-export async function createOrder(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
+export async function createOrder(orderItems: { menu_id: string; quantity: number }[], customerNote?: string, businessEmail?: string): Promise<Order | null> {
   try {
     // Ensure user is authenticated
     await getCurrentUser()
@@ -197,8 +197,8 @@ export async function createOrder(orderItems: { menu_id: string; quantity: numbe
       return null
     }
 
-    // Fetch the complete order with items
-    return await getOrderById(orderData.order_id)
+    const { order } = await response.json()
+    return order
   } catch (error) {
     console.error('Error in createOrder:', error)
     return null

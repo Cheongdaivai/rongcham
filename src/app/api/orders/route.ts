@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createOrderServer, getAllOrdersServer, updateOrderStatusServer } from '@/lib/database-server'
 import { getServerUser } from '@/lib/auth-server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // The RLS policies will automatically filter orders to the authenticated user
     const orders = await getAllOrdersServer()
@@ -27,13 +27,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Order items are required' }, { status: 400 })
     }
 
+    if (!businessEmail) {
+      return NextResponse.json({ error: 'Business email is required to identify which business the order belongs to' }, { status: 400 })
+    }
+
     // Convert items to the format expected by createOrder
     const orderItems = items.map((item: any) => ({
       menu_id: item.menu_id || item.id,
       quantity: item.quantity
     }))
 
-    const order = await createOrderServer(orderItems, customerNote)
+    const order = await createOrderServer(orderItems, customerNote, businessEmail)
     
     if (!order) {
       return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })

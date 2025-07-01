@@ -98,7 +98,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_CART' });
   };
 
-  const createOrderFromCart = async (customerNote?: string): Promise<Order | null> => {
+  const createOrderFromCart = async (customerNote?: string, businessEmail?: string): Promise<Order | null> => {
     if (state.items.length === 0) return null;
 
     const orderItems = state.items.map(item => ({
@@ -107,7 +107,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }));
 
     try {
-      const order = await createOrder(orderItems, customerNote);
+      const order = await createOrder(orderItems, customerNote, businessEmail);
       if (order) {
         clearCart(); // Clear cart after successful order
       }

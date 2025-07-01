@@ -1,0 +1,98 @@
+
+> rong-cham@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.4 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://10.255.255.254:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 1272ms
+ ✓ Ready in 18.8s
+ ○ Compiling /api/menu ...
+ ✓ Compiled /api/menu in 3s
+ GET /api/menu 200 in 4835ms
+Error getting server user: Error [AuthSessionMissingError]: Auth session missing!
+    at <unknown> (../../src/GoTrueClient.ts:1421:48)
+    at SupabaseAuthClient._useSession (../../src/GoTrueClient.ts:1276:19)
+    at async SupabaseAuthClient._getUser (../../src/GoTrueClient.ts:1413:13)
+    at async (../../src/GoTrueClient.ts:1397:13)
+    at async (../../src/GoTrueClient.ts:1184:17) {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ GET /api/menu?includeUnavailable=true 401 in 626ms
+ ○ Compiling /api/orders ...
+ ✓ Compiled /api/orders in 1798ms
+ GET /api/orders 200 in 2536ms
+Error getting server user: Error [AuthSessionMissingError]: Auth session missing!
+    at <unknown> (../../src/GoTrueClient.ts:1421:48)
+    at SupabaseAuthClient._useSession (../../src/GoTrueClient.ts:1276:19)
+    at async SupabaseAuthClient._getUser (../../src/GoTrueClient.ts:1413:13)
+    at async (../../src/GoTrueClient.ts:1397:13)
+    at async (../../src/GoTrueClient.ts:1184:17) {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ POST /api/menu 401 in 565ms
+ POST /api/orders 201 in 1504ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 1900ms
+Error signing in: Error [AuthApiError]: Invalid login credentials
+    at handleError (../../../src/lib/fetch.ts:102:8)
+    at async _handleRequest (../../../src/lib/fetch.ts:195:4)
+    at async _request (../../../src/lib/fetch.ts:157:15)
+    at async SupabaseAuthClient.signInWithPassword (../../src/GoTrueClient.ts:531:14)
+    at async signInWithEmailServer (src/lib/auth-server.ts:18:26)
+    at async POST (src/app/api/auth/login/route.ts:12:28)
+  16 | export async function signInWithEmailServer(email: string, password: string) {
+  17 |   const supabase = await createClient()
+> 18 |   const { data, error } = await supabase.auth.signInWithPassword({
+     |                          ^
+  19 |     email,
+  20 |     password,
+  21 |   }) {
+  __isAuthError: true,
+  status: 400,
+  code: 'invalid_credentials'
+}
+ POST /api/auth/login 401 in 2850ms
+Error updating order status: {
+  code: 'PGRST116',
+  details: 'The result contains 0 rows',
+  hint: null,
+  message: 'JSON object requested, multiple (or no) rows returned'
+}
+ PUT /api/orders 500 in 819ms
+Error getting server user: Error [AuthSessionMissingError]: Auth session missing!
+    at <unknown> (../../src/GoTrueClient.ts:1421:48)
+    at SupabaseAuthClient._useSession (../../src/GoTrueClient.ts:1276:19)
+    at async SupabaseAuthClient._getUser (../../src/GoTrueClient.ts:1413:13)
+    at async (../../src/GoTrueClient.ts:1397:13)
+    at async (../../src/GoTrueClient.ts:1184:17) {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ PUT /api/menu 401 in 524ms
+Error getting server user: Error [AuthSessionMissingError]: Auth session missing!
+    at <unknown> (../../src/GoTrueClient.ts:1421:48)
+    at SupabaseAuthClient._useSession (../../src/GoTrueClient.ts:1276:19)
+    at async SupabaseAuthClient._getUser (../../src/GoTrueClient.ts:1413:13)
+    at async (../../src/GoTrueClient.ts:1397:13)
+    at async (../../src/GoTrueClient.ts:1184:17) {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ DELETE /api/menu?menu_id=8ed3dddf-eda8-47f7-9bde-2e0449b5ffc8 401 in 492ms
+ POST /api/orders 400 in 464ms
+ POST /api/orders 400 in 437ms
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 1726ms
+ POST /api/auth/logout 200 in 2111ms
+[?25h

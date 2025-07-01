@@ -6,18 +6,29 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const includeUnavailable = searchParams.get('includeUnavailable') === 'true'
+    const businessEmail = searchParams.get('businessEmail')
     
     let menuItems
     if (includeUnavailable) {
-      // Admin access - get all items
+      // Admin access - get all items (optionally filtered by business email)
       const user = await getServerUser()
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
-      menuItems = await getAllMenuItemsServer()
+      // If no businessEmail specified, use authenticated user's email
+      const filterEmail = businessEmail || user.email
+      menuItems = await getAllMenuItemsServer(filterEmail || undefined)
     } else {
-      // Public access - get only available items
-      menuItems = await getMenuItemsServer()
+      // Public access - get only available items (filtered by business email if provided)
+      if (businessEmail) {
+        // Filter public menu by business
+        menuItems = await getAllMenuItemsServer(businessEmail)
+        // Only return available items
+        menuItems = menuItems.filter(item => item.availability)
+      } else {
+        // Get all available items (for shared public menu)
+        menuItems = await getMenuItemsServer()
+      }
     }
     
     return NextResponse.json(menuItems)
@@ -40,7 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 })
     }
 
-    const menuItem = await createMenuItemServer(menuItemData)
+    const menuItem = await createMenuItemServer(menuItemData, user.email)
     
     if (!menuItem) {
       return NextResponse.json({ error: 'Failed to create menu item' }, { status: 500 })
