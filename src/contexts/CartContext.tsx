@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useState } from 'react';
 import { CartItem, MenuItem, CartContextType, Order } from '@/types';
 import { createOrder } from '@/lib/database';
 
@@ -81,21 +81,33 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [checkoutOrderTotal, setCheckoutOrderTotal] = useState(0);
 
-  const addItem = (menuItem: MenuItem) => {
-    dispatch({ type: 'ADD_ITEM', payload: menuItem });
+  const addItem = (item: MenuItem) => {
+    dispatch({ type: 'ADD_ITEM', payload: item });
   };
 
-  const removeItem = (menu_id: string) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: menu_id });
+  const removeItem = (menuId: string) => {
+    dispatch({ type: 'REMOVE_ITEM', payload: menuId });
   };
 
-  const updateQuantity = (menu_id: string, quantity: number) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { menu_id, quantity } });
+  const updateQuantity = (menuId: string, quantity: number) => {
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { menu_id: menuId, quantity } });
   };
 
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const showCheckoutModal = (orderTotal: number) => {
+    setCheckoutOrderTotal(orderTotal);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const hideCheckoutModal = () => {
+    setIsCheckoutModalOpen(false);
+    setCheckoutOrderTotal(0);
   };
 
   const createOrderFromCart = async (customerNote?: string, businessEmail?: string): Promise<Order | null> => {
@@ -113,7 +125,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return order;
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error creating mock order:', error);
       return null;
     }
   };
@@ -130,6 +142,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     total,
     itemCount,
     createOrder: createOrderFromCart,
+    isCheckoutModalOpen,
+    checkoutOrderTotal,
+    showCheckoutModal,
+    hideCheckoutModal,
   };
 
   return (

@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
 
     const { items, customerNote } = await request.json()
     
+    console.log('Received order request:', { items, customerNote })
+    
     if (!items || !Array.isArray(items) || items.length === 0) {
+      console.log('Invalid items:', items)
       return NextResponse.json({ error: 'Order items are required' }, { status: 400 })
     }
     const CustomerEmail = user.email
@@ -38,6 +41,8 @@ export async function POST(request: NextRequest) {
       quantity: item.quantity
     }))
 
+    console.log('Converted order items:', orderItems)
+
     const order = await createOrderServer(orderItems, customerNote, CustomerEmail)
     
     if (!order) {
@@ -47,7 +52,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, order }, { status: 201 })
   } catch (error) {
     console.error('Error creating order:', error)
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to create order', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
   }
 }
 

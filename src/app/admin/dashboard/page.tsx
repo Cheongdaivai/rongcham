@@ -248,6 +248,32 @@ export default function AdminDashboard() {
   const pendingOrders = orders.filter(order => order.status === 'pending').length
   const completedOrders = orders.filter(order => order.status === 'done').length
 
+  // Calculate menu item statistics
+  const getMenuItemStats = (menuId: string) => {
+    let totalOrdered = 0
+    let totalRevenue = 0
+    let orderCount = 0
+
+    orders.forEach(order => {
+      if (order.status !== 'cancelled' && order.order_items) {
+        order.order_items.forEach(item => {
+          if (item.menu_item?.menu_id === menuId) {
+            totalOrdered += item.quantity
+            totalRevenue += item.subtotal
+            orderCount++
+          }
+        })
+      }
+    })
+
+    return { totalOrdered, totalRevenue, orderCount }
+  }
+
+  // Calculate total items in an order
+  const getTotalItemsInOrder = (orderItems: any[]) => {
+    return orderItems.reduce((total, item) => total + item.quantity, 0)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
@@ -367,88 +393,172 @@ export default function AdminDashboard() {
                   const StatusIcon = statusConfig.icon
                   
                   return (
-                    <Card key={order.order_id} className="p-4 sm:p-6 bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                      {/* Responsive order header */}
-                      <div className="flex flex-col sm:flex-row justify-between items-start mb-4 sm:mb-6 gap-4 sm:gap-0">
-                        <div className="flex items-start gap-3 sm:gap-4 flex-1">
-                          <div className="p-2 sm:p-3 bg-slate-100 rounded-lg sm:rounded-xl flex-shrink-0">
-                            <Package className="h-4 w-4 sm:h-6 sm:w-6 text-slate-600" />
+                    <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+                      {/* Simple status indicator */}
+                      <div className={`absolute top-0 left-0 w-full h-1 ${
+                        order.status === 'pending' ? 'bg-amber-400' :
+                        order.status === 'preparing' ? 'bg-blue-500' :
+                        order.status === 'done' ? 'bg-green-500' :
+                        'bg-red-500'
+                      }`}></div>
+
+                      <div className="p-6">
+                        {/* Clean order header */}
+                        <div className="flex flex-col lg:flex-row justify-between items-start mb-6 gap-6">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className="p-3 bg-slate-100 rounded-lg flex-shrink-0">
+                              <Package className="h-6 w-6 text-slate-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-xl font-semibold text-slate-900">
+                                  Order #{order.order_number}
+                                </h3>
+                                <Badge className={`${statusConfig.color} px-3 py-1 rounded-md font-medium text-sm border flex items-center gap-2`}>
+                                  <StatusIcon className="h-4 w-4" />
+                                  {statusConfig.label}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
+                                <Clock className="h-4 w-4" />
+                                {new Date(order.created_at).toLocaleString()}
+                              </div>
+                              {order.customer_note && (
+                                <div className="bg-slate-50 p-3 rounded-lg border-l-4 border-blue-400 mt-3">
+                                  <p className="text-slate-700 text-sm">
+                                    <span className="font-medium text-slate-800">Note:</span> {order.customer_note}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-slate-800">Order #{order.order_number}</h3>
-                            <p className="text-slate-500 text-xs sm:text-sm">
-                              {new Date(order.created_at).toLocaleString()}
-                            </p>
-                            {order.customer_note && (
-                                                             <p className="text-slate-600 mt-2 text-xs sm:text-sm italic line-clamp-2">
-                                 &ldquo;{order.customer_note}&rdquo;
-                               </p>
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="bg-slate-900 text-white px-4 py-2 rounded-lg">
+                              <div className="text-right">
+                                <div className="text-xl font-bold">${order.total_amount.toFixed(2)}</div>
+                                <div className="text-slate-300 text-xs">Total</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Simple Order Items */}
+                        {order.order_items && (
+                          <div className="mb-6">
+                            {/* Clean items header */}
+                            <div className="bg-slate-50 p-4 rounded-lg mb-4 border border-slate-200">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Package className="h-5 w-5 text-slate-600" />
+                                  <div>
+                                    <h4 className="font-semibold text-slate-800">Order Items</h4>
+                                    <p className="text-slate-600 text-sm">Items in this order</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-sm font-medium">
+                                    {order.order_items.length} {order.order_items.length === 1 ? 'Type' : 'Types'}
+                                  </span>
+                                  <span className="px-3 py-1 bg-slate-800 text-white rounded-md text-sm font-medium">
+                                    {getTotalItemsInOrder(order.order_items)} {getTotalItemsInOrder(order.order_items) === 1 ? 'Item' : 'Items'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Clean items list */}
+                            <div className="space-y-3">
+                              {order.order_items.map((item, index) => (
+                                <div key={item.id} className="bg-white p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4 flex-1">
+                                      {/* Simple quantity */}
+                                      <div className="w-10 h-10 bg-slate-100 border border-slate-300 rounded-lg flex items-center justify-center">
+                                        <span className="text-slate-700 font-semibold">{item.quantity}</span>
+                                      </div>
+                                      
+                                      {/* Item details */}
+                                      <div className="flex-1">
+                                        <h5 className="font-medium text-slate-900 mb-1">
+                                          {item.menu_item?.name || 'Unknown Item'}
+                                        </h5>
+                                        {item.menu_item?.price && (
+                                          <p className="text-slate-500 text-sm">
+                                            ${item.menu_item.price.toFixed(2)} each
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Simple price */}
+                                    <div className="text-right">
+                                      <div className="bg-slate-800 text-white px-3 py-2 rounded-lg">
+                                        <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {/* Simple total summary */}
+                            <div className="mt-4 p-4 bg-slate-800 text-white rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">Order Total</span>
+                                <span className="text-xl font-bold">${order.total_amount.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Simple Status Controls */}
+                        <div className="border-t border-slate-200 pt-4 mt-6">
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            {order.status === 'pending' && (
+                              <>
+                                <Button
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-medium transition-colors"
+                                  onClick={() => handleOrderStatusUpdate(order.order_id, 'preparing')}
+                                >
+                                  <ChefHat className="w-4 h-4 mr-2" />
+                                  Start Preparing
+                                </Button>
+                                <Button
+                                  className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg py-3 font-medium transition-colors"
+                                  onClick={() => handleOrderStatusUpdate(order.order_id, 'cancelled')}
+                                >
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Cancel Order
+                                </Button>
+                              </>
+                            )}
+                            {order.status === 'preparing' && (
+                              <Button
+                                className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-medium transition-colors"
+                                onClick={() => handleOrderStatusUpdate(order.order_id, 'done')}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Mark as Complete
+                              </Button>
+                            )}
+                            {order.status === 'done' && (
+                              <div className="w-full bg-green-50 border border-green-200 rounded-lg py-3 px-4">
+                                <div className="flex items-center justify-center gap-2 text-green-700">
+                                  <CheckCircle className="w-5 h-5" />
+                                  <span className="font-medium">Order Completed</span>
+                                </div>
+                              </div>
+                            )}
+                            {order.status === 'cancelled' && (
+                              <div className="w-full bg-red-50 border border-red-200 rounded-lg py-3 px-4">
+                                <div className="flex items-center justify-center gap-2 text-red-700">
+                                  <XCircle className="w-5 h-5" />
+                                  <span className="font-medium">Order Cancelled</span>
+                                </div>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3 sm:space-y-3 w-full sm:w-auto justify-between sm:justify-start">
-                          <Badge className={`${statusConfig.color} px-2 sm:px-4 py-1 sm:py-2 rounded-full font-semibold text-xs sm:text-sm border flex items-center gap-1 sm:gap-2`}>
-                            <StatusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                            {statusConfig.label}
-                          </Badge>
-                          <span className="text-lg sm:text-2xl font-bold text-slate-800">
-                            ${order.total_amount.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Order Items */}
-                      {order.order_items && (
-                        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-xl">
-                          <h4 className="font-semibold mb-2 sm:mb-3 text-slate-700 flex items-center gap-2 text-sm sm:text-base">
-                            <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-                            Order Items:
-                          </h4>
-                          <div className="space-y-1 sm:space-y-2">
-                            {order.order_items.map((item) => (
-                              <div key={item.id} className="flex justify-between text-xs sm:text-sm bg-white p-2 sm:p-3 rounded-md sm:rounded-lg">
-                                <span className="font-medium text-slate-800 truncate mr-2">
-                                  {item.quantity}× {item.menu_item?.name || 'Unknown Item'}
-                                </span>
-                                <span className="font-semibold text-slate-800 flex-shrink-0">${item.subtotal.toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Responsive Status Controls */}
-                      <div className="flex flex-wrap gap-2 sm:gap-3">
-                        {order.status === 'pending' && (
-                          <>
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2"
-                              onClick={() => handleOrderStatusUpdate(order.order_id, 'preparing')}
-                            >
-                              <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              <span className="hidden xs:inline">Start </span>Preparing
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2"
-                              onClick={() => handleOrderStatusUpdate(order.order_id, 'cancelled')}
-                            >
-                              <XCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              Cancel
-                            </Button>
-                          </>
-                        )}
-                        {order.status === 'preparing' && (
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white rounded-lg sm:rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2"
-                            onClick={() => handleOrderStatusUpdate(order.order_id, 'done')}
-                          >
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            Mark as Done
-                          </Button>
-                        )}
                       </div>
                     </Card>
                   )
@@ -482,26 +592,64 @@ export default function AdminDashboard() {
                 <p className="text-sm sm:text-base text-slate-500">Add your first menu item to get started.</p>
               </Card>
             ) : (
-              <div className="grid gap-3 sm:gap-4">
-                {menuItems.map((item) => (
-                  <Card key={item.menu_id} className="p-4 sm:p-6 bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                      <div className="flex gap-3 sm:gap-4 flex-1">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
-                          {item.image_url && (
+              <div className="grid gap-6">
+                {menuItems.map((item, index) => (
+                  <Card key={item.menu_id} className="group relative overflow-hidden bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 transform hover:scale-[1.02]">
+                    {/* Modern Card Layout */}
+                    <div className="flex flex-col lg:flex-row">
+                      {/* Left: Image Section */}
+                      <div className="relative lg:w-80 h-48 lg:h-auto flex-shrink-0">
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
+                          {item.image_url ? (
                             <img 
                               src={item.image_url} 
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <div className="text-center text-white/80">
+                                <ChefHat className="h-16 w-16 mx-auto mb-4 opacity-60" />
+                                <p className="text-sm font-medium">No Image</p>
+                              </div>
+                            </div>
                           )}
+                          {/* Overlay gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-1">{item.name}</h3>
-                          <p className="text-slate-600 text-xs sm:text-sm mb-2 line-clamp-2">{item.description}</p>
-                          <p className="text-xl sm:text-2xl font-bold text-green-600">
-                            ${item.price.toFixed(2)}
-                          </p>
+                        
+                        {/* Image badges */}
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                          <div className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full">
+                            <span className="text-xs font-bold text-slate-800">#{index + 1}</span>
+                          </div>
+                          <Badge className={`${
+                            item.availability 
+                              ? 'bg-green-500 hover:bg-green-600' 
+                              : 'bg-red-500 hover:bg-red-600'
+                          } text-white border-0 px-3 py-1.5 rounded-full font-semibold text-xs shadow-lg`}>
+                            {item.availability ? (
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                Available
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5">
+                                <XCircle className="h-3 w-3" />
+                                Unavailable
+                              </div>
+                            )}
+                          </Badge>
+                        </div>
+
+                        {/* Price badge */}
+                        <div className="absolute bottom-4 right-4">
+                          <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-lg">
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                              <span className="text-2xl font-bold text-green-600">{item.price.toFixed(2)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2 sm:gap-3 w-full sm:w-auto">
@@ -529,6 +677,9 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Hover accent line */}
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </Card>
                 ))}
               </div>
@@ -563,3 +714,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+  

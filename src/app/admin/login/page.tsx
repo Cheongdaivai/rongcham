@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { signInWithEmail } from '@/lib/auth'
-import Link from 'next/link'
+import { Mail, Lock, Star, ChefHat, Shield, Award } from 'lucide-react'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -42,65 +40,66 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Admin Login
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Access the restaurant management dashboard
-          </p>
-        </div>
-        <Card className="p-8">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                {error}
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50 flex items-center justify-center p-4">
+      <div className="modern-card-container">
+        {/* Login Form Section */}
+        <div className="login-form">
+          <div className="header">
+            <h1 className="title">login</h1>
+            <p className="description">
+              please enter your credentials to access the admin dashboard.SIR!!!
+            </p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="error-message">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-red-600 text-sm font-medium">{error}</span>
               </div>
-            )}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Field */}
+            <div className="input_container">
+              <Mail className="icon" size={20} />
               <input
-                id="email"
-                name="email"
+                id="email_field"
+                className="input_field"
                 type="email"
-                autoComplete="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your email"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
+                placeholder="admin@restaurant.com"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your password"
               />
             </div>
 
-            <div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </Button>
+            {/* Password Field */}
+            <div className="input_container">
+              <Lock className="icon" size={20} />
+              <input
+                id="password_field"
+                className="input_field"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                required
+              />
             </div>
+
+            {/* Submit Button */}
+            <button
+              className="sign-in_btn"
+              type="submit"
+              disabled={loading}
+            >
+              <span>{loading ? 'Authenticating...' : 'login'}</span>
+            </button>
 
             <div className="text-center space-y-2">
               <Link 
@@ -120,7 +119,23 @@ export default function AdminLogin() {
               </div>
             </div>
           </form>
-        </Card>
+        </div>
+
+        {/* Testimonial Section */}
+        <div className="testimonial">
+          <p>
+            "welcome back chefs! let see what gonna do today sir"
+          </p>
+          <div className="user-profile-picture">
+            <ChefHat className="w-6 h-6 text-slate-600" />
+          </div>
+          <div className="user">
+            <span className="username">Chef dashboard</span>
+            <span className="occupation">Executive Chef &amp; Restaurant Manager</span>
+          </div>
+          
+
+        </div>
       </div>
     </div>
   )

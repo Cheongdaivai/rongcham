@@ -61,4 +61,9 @@ export interface CartContextType {
   total: number;
   itemCount: number;
   createOrder: (customerNote?: string, businessEmail?: string) => Promise<Order | null>;
+  // Checkout modal state
+  isCheckoutModalOpen: boolean;
+  checkoutOrderTotal: number;
+  showCheckoutModal: (orderTotal: number) => void;
+  hideCheckoutModal: () => void;
 }
