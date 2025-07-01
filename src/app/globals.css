@@ -162,17 +162,63 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Premium Shimmer Animation */
+/* Enhanced Shimmer Animation */
 @keyframes shimmer {
   0% {
-    transform: translateX(-100%);
+    transform: translateX(-100%) skewX(-15deg);
   }
   100% {
-    transform: translateX(200%);
+    transform: translateX(200%) skewX(-15deg);
   }
 }
 
-/* Luxury Animation Classes */
+/* Additional Admin Login Page Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-marquee {
   animation: marquee 45s linear infinite;
 }
@@ -205,14 +251,105 @@ h1, h2, h3, h4, h5, h6 {
   animation: shimmer 2s ease-in-out infinite;
 }
 
-/* Luxury Hover Effects */
-.hover-lift {
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* Animated Login Form Border Animations */
+@keyframes border-1 {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 100%;
+  }
 }
 
-.hover-lift:hover {
-  transform: translateY(-8px) scale(1.02);
-  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
+@keyframes border-2 {
+  0% {
+    top: -100%;
+  }
+  50%, 100% {
+    top: 100%;
+  }
+}
+
+@keyframes border-3 {
+  0% {
+    right: -100%;
+  }
+  50%, 100% {
+    right: 100%;
+  }
+}
+
+@keyframes border-4 {
+  0% {
+    bottom: -100%;
+  }
+  50%, 100% {
+    bottom: 100%;
+  }
+}
+
+.animate-border-1 {
+  animation: border-1 1.5s linear infinite;
+}
+
+.animate-border-2 {
+  animation: border-2 1.5s linear infinite;
+  animation-delay: 0.375s;
+}
+
+.animate-border-3 {
+  animation: border-3 1.5s linear infinite;
+  animation-delay: 0.75s;
+}
+
+.animate-border-4 {
+  animation: border-4 1.5s linear infinite;
+  animation-delay: 1.125s;
+}
+
+/* Enhanced Border Glow Effect */
+@keyframes border-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.5), 0 0 10px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.animate-border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+/* Ultra-Premium Pulse Animation */
+@keyframes luxury-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-luxury-pulse {
+  animation: luxury-pulse 3s ease-in-out infinite;
+}
+
+/* Premium Gradient Text Animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-text {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
 }
 
 /* Premium Modal Styles */
@@ -296,13 +433,14 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
-/* Glass morphism utilities */
-.backdrop-blur-xl {
-  backdrop-filter: blur(24px);
-}
-
-.backdrop-blur-3xl {
-  backdrop-filter: blur(64px);
+/* Enhanced Glass Morphism with Luxury Gradients */
+.glass-luxury-enhanced {
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Perspective for 3D transforms */
@@ -378,3 +516,386 @@ h1, h2, h3, h4, h5, h6 {
     0 0 20px rgba(251, 191, 36, 0.3);
   transform: scale(1.02);
 }
+
+/* Enhanced Focus States for Premium Forms */
+.form-luxury:focus {
+  outline: none;
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 
+    0 0 0 3px rgba(251, 191, 36, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-luxury:focus + label {
+  color: rgb(251, 191, 36);
+}
+
+/* Animated Login Form Styles */
+.animated-login-form {
+  animation: fade-in 0.6s ease-out;
+}
+
+.user-box input:focus ~ label,
+.user-box input:valid ~ label {
+  transform: translateY(-20px);
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+.animated-submit-btn:hover {
+  background: #10b981;
+  color: #000000;
+  border-radius: 0.375rem;
+}
+
+/* Premium Loading Spinner */
+@keyframes luxury-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-luxury-spin {
+  animation: luxury-spin 1s linear infinite;
+}
+
+/* ========================================
+   MODERN CARD DESIGN STYLES (New Admin Login)
+   ======================================== */
+
+/* Modern Card Container Styles (Based on Example) */
+.modern-card-container {
+  height: fit-content;
+  display: flex;
+  box-shadow: 0px 187px 75px rgba(0, 0, 0, 0.01), 0px 105px 63px rgba(0, 0, 0, 0.05), 0px 47px 47px rgba(0, 0, 0, 0.09), 0px 12px 26px rgba(0, 0, 0, 0.1), 0px 0px 0px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 800px;
+  width: 100%;
+}
+
+.login-form {
+  width: 400px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 40px 30px;
+  border-radius: 12px 0 0 12px;
+  background-color: #fff;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0 30px 0;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 32px;
+  text-align: center;
+  color: #2B2B2F;
+  margin-bottom: 12px;
+}
+
+.description {
+  max-width: 90%;
+  margin: auto;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  color: #5F5D6B;
+}
+
+.error-message {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.input_container {
+  width: 100%;
+  height: fit-content;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  z-index: 99;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6B7280;
+}
+
+.input_field {
+  width: 100%;
+  height: 48px;
+  padding: 0 0 0 50px;
+  border-radius: 8px;
+  outline: none;
+  border: 1px solid #e5e5e5;
+  filter: drop-shadow(0px 1px 0px #efefef) drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
+  transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
+  font-size: 15px;
+  color: #374151;
+}
+
+.input_field:focus {
+  border: 2px solid #115DFC;
+  box-shadow: 0px 0px 0px 3px rgba(17, 93, 252, 0.1);
+  background-color: transparent;
+}
+
+.input_field::placeholder {
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+.sign-in_btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(180deg, #4480FF 0%, #115DFC 50%, #0550ED 100%);
+  box-shadow: 0px 0.5px 0.5px #EFEFEF, 0px 1px 0.5px rgba(239, 239, 239, 0.5);
+  border-radius: 8px;
+  border: 0;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 20px;
+  color: #ffffff;
+  transition: all 0.6s cubic-bezier(0.15, 0.83, 0.66, 1);
+  cursor: pointer;
+}
+
+.sign-in_btn:hover {
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 10px 20px 0 rgba(5, 80, 237, 0.4);
+}
+
+.sign-in_btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.testimonial {
+  width: 400px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 30px;
+  background: linear-gradient(358.31deg, #fff -24.13%, hsla(0,0%,100%,0) 338.58%), 
+              linear-gradient(89.84deg, rgba(230,36,174,.15) .34%, rgba(94,58,255,.15) 16.96%, rgba(10,136,255,.15) 34.66%, rgba(75,191,80,.15) 50.12%, rgba(137,206,0,.15) 66.22%, rgba(239,183,0,.15) 82%, rgba(246,73,0,.15) 99.9%);
+  border-radius: 0 12px 12px 0;
+}
+
+.testimonial p {
+  color: #4d4c6d;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
+  line-height: 22px;
+  margin: 0;
+}
+
+.user-profile-picture {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.username {
+  color: #4d4c6d;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 600;
+  margin: 0;
+}
+
+.occupation {
+  color: rgb(141, 140, 161);
+  font-size: 13px;
+  text-align: center;
+  font-weight: 500;
+  margin: 0;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4d4c6d;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Responsive Design for Modern Card */
+@media (max-width: 768px) {
+  .modern-card-container {
+    flex-direction: column;
+    max-width: 400px;
+  }
+  
+  .login-form {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .testimonial {
+    width: 100%;
+    border-radius: 0 0 12px 12px;
+  }
+}
+
+/* Professional Order Card Enhancements */
+.border-3 {
+  border-width: 3px;
+}
+
+/* Enhanced gradient backgrounds */
+.bg-gradient-professional {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Enhanced shadows */
+.shadow-professional {
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Animated gradient text */
+.gradient-text {
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4);
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Enhanced button hover effects */
+.btn-professional {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-professional::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-professional:hover::before {
+  left: 100%;
+}
+
+/* Professional card animations */
+.card-professional {
+  transform: translateY(0);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-professional:hover {
+  transform: translateY(-8px);
+}
+
+/* Enhanced status indicators */
+.status-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.status-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Professional typography */
+.text-professional {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Enhanced borders */
+.border-professional {
+  border-image: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4) 1;
+  border-width: 2px;
+  border-style: solid;
+}
+
+/* ======================================== */
