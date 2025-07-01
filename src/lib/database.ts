@@ -4,9 +4,25 @@ import { MenuItem, Order, OrderItem } from '@/types'
 // Client-side database functions
 const getSupabaseClient = () => createClient()
 
+// Helper function to get current user
+async function getCurrentUser() {
+  const supabase = getSupabaseClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  if (error || !user) {
+    throw new Error('User not authenticated')
+  }
+  
+  return user
+}
+
 // Menu Item CRUD Operations
 export async function getMenuItems(): Promise<MenuItem[]> {
   const supabase = getSupabaseClient()
+  
+  // RLS policies will automatically filter to show:
+  // - Items created by the current user
+  // - Available public items (created_by_email IS NULL)
   const { data, error } = await supabase
     .from('menu_item')
     .select('*')
@@ -23,6 +39,8 @@ export async function getMenuItems(): Promise<MenuItem[]> {
 
 export async function getAllMenuItems(): Promise<MenuItem[]> {
   const supabase = getSupabaseClient()
+  
+  // This will return only items the user has access to via RLS
   const { data, error } = await supabase
     .from('menu_item')
     .select('*')
@@ -36,60 +54,99 @@ export async function getAllMenuItems(): Promise<MenuItem[]> {
   return data || []
 }
 
-export async function createMenuItem(menuItem: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at'>): Promise<MenuItem | null> {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase
-    .from('menu_item')
-    .insert(menuItem)
-    .select()
-    .single()
+export async function createMenuItem(menuItem: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at' | 'created_by_email'>): Promise<MenuItem | null> {
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = getSupabaseClient()
+    
+    // The trigger will automatically set created_by_email
+    const { data, error } = await supabase
+      .from('menu_item')
+      .insert(menuItem)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error creating menu item:', error)
+    if (error) {
+      console.error('Error creating menu item:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in createMenuItem:', error)
     return null
   }
-
-  return data
 }
 
 export async function updateMenuItem(menu_id: string, updates: Partial<MenuItem>): Promise<MenuItem | null> {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase
-    .from('menu_item')
-    .update(updates)
-    .eq('menu_id', menu_id)
-    .select()
-    .single()
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = getSupabaseClient()
+    
+    // Remove email from updates as it should not be changeable
+    const { created_by_email, ...safeUpdates } = updates
+    
+    // RLS policy will ensure user can only update their own items
+    const { data, error } = await supabase
+      .from('menu_item')
+      .update(safeUpdates)
+      .eq('menu_id', menu_id)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error updating menu item:', error)
+    if (error) {
+      console.error('Error updating menu item:', error)
+      console.error('Update data:', safeUpdates)
+      console.error('Menu ID:', menu_id)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in updateMenuItem:', error)
     return null
   }
-
-  return data
 }
 
 export async function deleteMenuItem(menu_id: string): Promise<boolean> {
-  const supabase = getSupabaseClient()
-  const { error } = await supabase
-    .from('menu_item')
-    .delete()
-    .eq('menu_id', menu_id)
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = getSupabaseClient()
+    
+    // RLS policy will ensure user can only delete their own items
+    const { error } = await supabase
+      .from('menu_item')
+      .delete()
+      .eq('menu_id', menu_id)
 
-  if (error) {
-    console.error('Error deleting menu item:', error)
+    if (error) {
+      console.error('Error deleting menu item:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in deleteMenuItem:', error)
     return false
   }
-
-  return true
 }
 
 // Order Operations
 export async function createOrder(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
   try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
     const supabase = getSupabaseClient()
     
     // Start a transaction by creating the order first
+    // The trigger will automatically set customer_email
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -149,85 +206,116 @@ export async function createOrder(orderItems: { menu_id: string; quantity: numbe
 }
 
 export async function getOrderById(order_id: number): Promise<Order | null> {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items:order_item(
+  try {
+    const supabase = getSupabaseClient()
+    
+    // RLS policy will ensure user can only access their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
         *,
-        menu_item(*)
-      )
-    `)
-    .eq('order_id', order_id)
-    .single()
+        order_items:order_item(
+          *,
+          menu_item(*)
+        )
+      `)
+      .eq('order_id', order_id)
+      .single()
 
-  if (error) {
-    console.error('Error fetching order:', error)
+    if (error) {
+      console.error('Error fetching order:', error)
+      return null
+    }
+
+    return data as Order
+  } catch (error) {
+    console.error('Error in getOrderById:', error)
     return null
   }
-
-  return data as Order
 }
 
 export async function getAllOrders(): Promise<Order[]> {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items:order_item(
+  try {
+    const supabase = getSupabaseClient()
+    
+    // RLS policy will ensure user can only access their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
         *,
-        menu_item(*)
-      )
-    `)
-    .order('created_at', { ascending: false })
+        order_items:order_item(
+          *,
+          menu_item(*)
+        )
+      `)
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching orders:', error)
+    if (error) {
+      console.error('Error fetching orders:', error)
+      return []
+    }
+
+    return data as Order[]
+  } catch (error) {
+    console.error('Error in getAllOrders:', error)
     return []
   }
-
-  return data as Order[]
 }
 
 export async function getPendingOrders(): Promise<Order[]> {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items:order_item(
+  try {
+    const supabase = getSupabaseClient()
+    
+    // RLS policy will ensure user can only access their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
         *,
-        menu_item(*)
-      )
-    `)
-    .in('status', ['pending', 'preparing'])
-    .order('created_at', { ascending: true })
+        order_items:order_item(
+          *,
+          menu_item(*)
+        )
+      `)
+      .in('status', ['pending', 'preparing'])
+      .order('created_at', { ascending: true })
 
-  if (error) {
-    console.error('Error fetching pending orders:', error)
+    if (error) {
+      console.error('Error fetching pending orders:', error)
+      return []
+    }
+
+    return data as Order[]
+  } catch (error) {
+    console.error('Error in getPendingOrders:', error)
     return []
   }
-
-  return data as Order[]
 }
 
 export async function updateOrderStatus(order_id: number, status: Order['status']): Promise<Order | null> {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status })
-    .eq('order_id', order_id)
-    .select()
-    .single()
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = getSupabaseClient()
+    
+    // RLS policy will ensure user can only update their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('order_id', order_id)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error updating order status:', error)
+    if (error) {
+      console.error('Error updating order status:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in updateOrderStatus:', error)
     return null
   }
-
-  return data
 }
 
 // Real-time subscriptions

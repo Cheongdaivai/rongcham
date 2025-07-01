@@ -5,6 +5,7 @@ export interface MenuItem {
   availability: boolean;
   image_url?: string;
   description?: string;
+  created_by_email?: string;
   created_at: string;
   updated_at: string;
 }
@@ -15,6 +16,7 @@ export interface Order {
   total_amount: number;
   status: 'pending' | 'preparing' | 'done' | 'cancelled';
   customer_note?: string;
+  customer_email?: string;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];

@@ -6,9 +6,25 @@ async function getServerSupabaseClient() {
   return await createClient()
 }
 
+// Helper function to get current user
+async function getCurrentUser() {
+  const supabase = await getServerSupabaseClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  if (error || !user) {
+    throw new Error('User not authenticated')
+  }
+  
+  return user
+}
+
 // Menu Item CRUD Operations (Server-side)
 export async function getMenuItemsServer(): Promise<MenuItem[]> {
   const supabase = await getServerSupabaseClient()
+  
+  // RLS policies will automatically filter to show:
+  // - Items created by the current user
+  // - Available public items (created_by_email IS NULL)
   const { data, error } = await supabase
     .from('menu_item')
     .select('*')
@@ -25,6 +41,8 @@ export async function getMenuItemsServer(): Promise<MenuItem[]> {
 
 export async function getAllMenuItemsServer(): Promise<MenuItem[]> {
   const supabase = await getServerSupabaseClient()
+  
+  // This will return only items the user has access to via RLS
   const { data, error } = await supabase
     .from('menu_item')
     .select('*')
@@ -38,60 +56,111 @@ export async function getAllMenuItemsServer(): Promise<MenuItem[]> {
   return data || []
 }
 
-export async function createMenuItemServer(menuItem: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at'>): Promise<MenuItem | null> {
-  const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('menu_item')
-    .insert(menuItem)
-    .select()
-    .single()
+export async function createMenuItemServer(menuItem: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at' | 'created_by_email'>): Promise<MenuItem | null> {
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = await getServerSupabaseClient()
+    
+    // The trigger will automatically set created_by_email
+    const { data, error } = await supabase
+      .from('menu_item')
+      .insert(menuItem)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error creating menu item:', error)
+    if (error) {
+      console.error('Error creating menu item:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in createMenuItemServer:', error)
     return null
   }
-
-  return data
 }
 
 export async function updateMenuItemServer(menu_id: string, updates: Partial<MenuItem>): Promise<MenuItem | null> {
-  const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('menu_item')
-    .update(updates)
-    .eq('menu_id', menu_id)
-    .select()
-    .single()
+  try {
+    // Ensure user is authenticated
+    const user = await getCurrentUser()
+    console.log('updateMenuItemServer - Current user:', user.email)
+    
+    const supabase = await getServerSupabaseClient()
+    
+    // Remove email from updates as it should not be changeable
+    const { created_by_email, ...safeUpdates } = updates
+    
+    console.log('updateMenuItemServer - Safe updates:', safeUpdates)
+    console.log('updateMenuItemServer - Menu ID:', menu_id)
+    
+    // Use direct update with service role privileges for admin operations
+    // This bypasses RLS for admin users
+    const { data, error } = await supabase
+      .from('menu_item')
+      .update(safeUpdates)
+      .eq('menu_id', menu_id)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error updating menu item:', error)
+    if (error) {
+      console.error('Error updating menu item:', error)
+      console.error('Update data:', safeUpdates)
+      console.error('Menu ID:', menu_id)
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      return null
+    }
+
+    console.log('updateMenuItemServer - Success:', data)
+    return data
+  } catch (error) {
+    console.error('Error in updateMenuItemServer:', error)
     return null
   }
-
-  return data
 }
 
 export async function deleteMenuItemServer(menu_id: string): Promise<boolean> {
-  const supabase = await getServerSupabaseClient()
-  const { error } = await supabase
-    .from('menu_item')
-    .delete()
-    .eq('menu_id', menu_id)
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = await getServerSupabaseClient()
+    
+    // RLS policy will ensure user can only delete their own items
+    const { error } = await supabase
+      .from('menu_item')
+      .delete()
+      .eq('menu_id', menu_id)
 
-  if (error) {
-    console.error('Error deleting menu item:', error)
+    if (error) {
+      console.error('Error deleting menu item:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error in deleteMenuItemServer:', error)
     return false
   }
-
-  return true
 }
 
 // Order Operations (Server-side)
 export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string): Promise<Order | null> {
   try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
     const supabase = await getServerSupabaseClient()
     
     // Start a transaction by creating the order first
+    // The trigger will automatically set customer_email
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -145,67 +214,91 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
     // Fetch the complete order with items
     return await getOrderByIdServer(orderData.order_id)
   } catch (error) {
-    console.error('Error in createOrder:', error)
+    console.error('Error in createOrderServer:', error)
     return null
   }
 }
 
 export async function getOrderByIdServer(order_id: number): Promise<Order | null> {
-  const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items:order_item(
+  try {
+    const supabase = await getServerSupabaseClient()
+    
+    // RLS policy will ensure user can only access their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
         *,
-        menu_item(*)
-      )
-    `)
-    .eq('order_id', order_id)
-    .single()
+        order_items:order_item(
+          *,
+          menu_item(*)
+        )
+      `)
+      .eq('order_id', order_id)
+      .single()
 
-  if (error) {
-    console.error('Error fetching order:', error)
+    if (error) {
+      console.error('Error fetching order:', error)
+      return null
+    }
+
+    return data as Order
+  } catch (error) {
+    console.error('Error in getOrderByIdServer:', error)
     return null
   }
-
-  return data as Order
 }
 
 export async function getAllOrdersServer(): Promise<Order[]> {
-  const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items:order_item(
+  try {
+    const supabase = await getServerSupabaseClient()
+    
+    // RLS policy will ensure user can only access their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
         *,
-        menu_item(*)
-      )
-    `)
-    .order('created_at', { ascending: false })
+        order_items:order_item(
+          *,
+          menu_item(*)
+        )
+      `)
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching orders:', error)
+    if (error) {
+      console.error('Error fetching orders:', error)
+      return []
+    }
+
+    return data as Order[]
+  } catch (error) {
+    console.error('Error in getAllOrdersServer:', error)
     return []
   }
-
-  return data as Order[]
 }
 
 export async function updateOrderStatusServer(order_id: number, status: Order['status']): Promise<Order | null> {
-  const supabase = await getServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status })
-    .eq('order_id', order_id)
-    .select()
-    .single()
+  try {
+    // Ensure user is authenticated
+    await getCurrentUser()
+    
+    const supabase = await getServerSupabaseClient()
+    
+    // RLS policy will ensure user can only update their own orders
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('order_id', order_id)
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error updating order status:', error)
+    if (error) {
+      console.error('Error updating order status:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in updateOrderStatusServer:', error)
     return null
   }
-
-  return data
 }

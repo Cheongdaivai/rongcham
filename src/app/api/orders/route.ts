@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrderServer, getAllOrdersServer, updateOrderStatusServer } from '@/lib/database-server'
+import { getServerUser } from '@/lib/auth-server'
 
 export async function GET() {
   try {
+    // The RLS policies will automatically filter orders to the authenticated user
     const orders = await getAllOrdersServer()
     return NextResponse.json({ orders })
   } catch (error) {
@@ -13,6 +15,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication for creating orders
+    const user = await getServerUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { items, customerNote } = await request.json()
     
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -40,6 +48,12 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Check authentication for updating orders
+    const user = await getServerUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { orderId, status } = await request.json()
     
     if (!orderId || !status) {

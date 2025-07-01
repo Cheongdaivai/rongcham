@@ -9,6 +9,8 @@ import { Order, MenuItem } from '@/types'
 import { getCurrentUser, signOut } from '@/lib/auth'
 import { getAllOrders, updateOrderStatus, getAllMenuItems } from '@/lib/database'
 import { User } from '@supabase/supabase-js'
+import MenuItemModal from '@/components/MenuItemModal'
+import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import { 
   Clock, 
   ChefHat, 
@@ -29,6 +31,11 @@ export default function AdminDashboard() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders')
   const [loading, setLoading] = useState(true)
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null)
+  const [deletingMenuItem, setDeletingMenuItem] = useState<MenuItem | null>(null)
+  const [menuActionLoading, setMenuActionLoading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -73,6 +80,129 @@ export default function AdminDashboard() {
       ))
     } catch (error) {
       console.error('Error updating order status:', error)
+    }
+  }
+
+  const handleAddMenuItem = () => {
+    setEditingMenuItem(null)
+    setIsMenuModalOpen(true)
+  }
+
+  const handleEditMenuItem = (item: MenuItem) => {
+    setEditingMenuItem(item)
+    setIsMenuModalOpen(true)
+  }
+
+  const handleDeleteMenuItem = (item: MenuItem) => {
+    setDeletingMenuItem(item)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleSaveMenuItem = async (menuItemData: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at' | 'created_by_email'>) => {
+    setMenuActionLoading(true)
+    try {
+      console.log('handleSaveMenuItem called with:', menuItemData)
+      console.log('editingMenuItem:', editingMenuItem)
+      
+      if (editingMenuItem) {
+        // Update existing item via API
+        console.log('Updating menu item with ID:', editingMenuItem.menu_id)
+        const response = await fetch('/api/menu', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            menu_id: editingMenuItem.menu_id,
+            ...menuItemData
+          })
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update menu item')
+        }
+        
+        const updatedItem = await response.json()
+        console.log('Update result:', updatedItem)
+        
+        setMenuItems(items => items.map(item => 
+          item.menu_id === editingMenuItem.menu_id ? updatedItem : item
+        ))
+      } else {
+        // Create new item via API
+        console.log('Creating new menu item')
+        const response = await fetch('/api/menu', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(menuItemData)
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to create menu item')
+        }
+        
+        const newItem = await response.json()
+        console.log('Create result:', newItem)
+        
+        setMenuItems(items => [...items, newItem])
+      }
+      setIsMenuModalOpen(false)
+      setEditingMenuItem(null)
+    } catch (error) {
+      console.error('Error in handleSaveMenuItem:', error)
+      alert(`Failed to ${editingMenuItem ? 'update' : 'create'} menu item: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw error
+    } finally {
+      setMenuActionLoading(false)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingMenuItem) return
+    
+    setMenuActionLoading(true)
+    try {
+      // First, delete the menu item from database
+      const response = await fetch(`/api/menu?menu_id=${deletingMenuItem.menu_id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete menu item')
+      }
+
+      // If the item has an image from our storage, try to delete it
+      if (deletingMenuItem.image_url && deletingMenuItem.image_url.includes('/storage/v1/object/public/menu-images/')) {
+        try {
+          // Extract filename from URL
+          const urlParts = deletingMenuItem.image_url.split('/')
+          const fileName = urlParts[urlParts.length - 1]?.split('?')[0]
+          
+          if (fileName) {
+            // Delete the image (don't fail the whole operation if this fails)
+            await fetch(`/api/upload-image?fileName=${encodeURIComponent(fileName)}`, {
+              method: 'DELETE',
+            })
+          }
+        } catch (imageError) {
+          console.error('Failed to delete image, but menu item was deleted:', imageError)
+        }
+      }
+      
+      setMenuItems(items => items.filter(item => item.menu_id !== deletingMenuItem.menu_id))
+      setIsDeleteModalOpen(false)
+      setDeletingMenuItem(null)
+    } catch (error) {
+      console.error('Error deleting menu item:', error)
+      alert(`Failed to delete menu item: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw error
+    } finally {
+      setMenuActionLoading(false)
     }
   }
 
@@ -336,7 +466,10 @@ export default function AdminDashboard() {
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Menu Management</h2>
                 <p className="text-sm sm:text-base text-slate-600">Manage your restaurant's menu items</p>
               </div>
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm px-4 py-2 w-full sm:w-auto">
+              <Button 
+                onClick={handleAddMenuItem}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm px-4 py-2 w-full sm:w-auto"
+              >
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                 Add Menu Item
               </Button>
@@ -376,11 +509,20 @@ export default function AdminDashboard() {
                           {item.availability ? 'Available' : 'Unavailable'}
                         </Badge>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="rounded-lg sm:rounded-xl border-slate-300 hover:border-blue-300 hover:text-blue-600 text-xs px-2 sm:px-3">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleEditMenuItem(item)}
+                            className="rounded-lg sm:rounded-xl border-slate-300 hover:border-blue-300 hover:text-blue-600 text-xs px-2 sm:px-3"
+                          >
                             <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                             <span className="hidden xs:inline">Edit</span>
                           </Button>
-                          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white rounded-lg sm:rounded-xl text-xs px-2 sm:px-3">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleDeleteMenuItem(item)}
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-lg sm:rounded-xl text-xs px-2 sm:px-3"
+                          >
                             <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                             <span className="hidden xs:inline">Delete</span>
                           </Button>
@@ -394,6 +536,30 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* Menu Item Modal */}
+      <MenuItemModal
+        isOpen={isMenuModalOpen}
+        onClose={() => {
+          setIsMenuModalOpen(false)
+          setEditingMenuItem(null)
+        }}
+        onSave={handleSaveMenuItem}
+        editingItem={editingMenuItem}
+        isLoading={menuActionLoading}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false)
+          setDeletingMenuItem(null)
+        }}
+        onConfirm={handleConfirmDelete}
+        item={deletingMenuItem}
+        isLoading={menuActionLoading}
+      />
     </div>
   )
 }

@@ -60,22 +60,30 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { menu_id, ...updates } = await request.json()
+    const requestData = await request.json()
+    console.log('PUT request data:', requestData)
+    
+    const { menu_id, ...updates } = requestData
     
     if (!menu_id) {
       return NextResponse.json({ error: 'Menu ID is required' }, { status: 400 })
     }
 
+    console.log('Updating menu item:', { menu_id, updates })
+    console.log('Current user:', user.email)
+    
     const updatedMenuItem = await updateMenuItemServer(menu_id, updates)
     
+    console.log('Update result:', updatedMenuItem)
+    
     if (!updatedMenuItem) {
-      return NextResponse.json({ error: 'Failed to update menu item' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update menu item - no data returned from server' }, { status: 500 })
     }
 
     return NextResponse.json(updatedMenuItem)
   } catch (error) {
-    console.error('Error updating menu item:', error)
-    return NextResponse.json({ error: 'Failed to update menu item' }, { status: 500 })
+    console.error('Error updating menu item in API route:', error)
+    return NextResponse.json({ error: `Failed to update menu item: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 })
   }
 }
 
