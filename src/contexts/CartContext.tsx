@@ -8,10 +8,14 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: MenuItem }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { menu_id: string; quantity: number } }
-  | { type: 'CLEAR_CART' };
+  | { type: 'CLEAR_CART' }
+  | { type: 'SHOW_CHECKOUT_MODAL'; payload: number }
+  | { type: 'HIDE_CHECKOUT_MODAL' };
 
 interface CartState {
   items: CartItem[];
+  isCheckoutModalOpen: boolean;
+  checkoutOrderTotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -74,13 +78,31 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         items: [],
       };
     
+    case 'SHOW_CHECKOUT_MODAL':
+      return {
+        ...state,
+        isCheckoutModalOpen: true,
+        checkoutOrderTotal: action.payload,
+      };
+    
+    case 'HIDE_CHECKOUT_MODAL':
+      return {
+        ...state,
+        isCheckoutModalOpen: false,
+        checkoutOrderTotal: 0,
+      };
+    
     default:
       return state;
   }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  const [state, dispatch] = useReducer(cartReducer, {
+    items: [],
+    isCheckoutModalOpen: false,
+    checkoutOrderTotal: 0
+  });
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [checkoutOrderTotal, setCheckoutOrderTotal] = useState(0);
 
@@ -109,6 +131,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsCheckoutModalOpen(false);
     setCheckoutOrderTotal(0);
   };
+
+  // const showCheckoutModal = (orderTotal: number) => {
+  //   dispatch({ type: 'SHOW_CHECKOUT_MODAL', payload: orderTotal });
+  // };
+
+  // const hideCheckoutModal = () => {
+  //   dispatch({ type: 'HIDE_CHECKOUT_MODAL' });
+  // };
 
   const createOrderFromCart = async (customerNote?: string, businessEmail?: string): Promise<Order | null> => {
     if (state.items.length === 0) return null;

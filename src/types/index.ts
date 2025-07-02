@@ -6,6 +6,7 @@ export interface MenuItem {
   image_url?: string;
   description?: string;
   created_by_email?: string;
+  total_ordered: number;
   created_at: string;
   updated_at: string;
   rating?: number;
@@ -16,7 +17,7 @@ export interface Order {
   order_id: number;
   order_number: number;
   total_amount: number;
-  status: 'pending' | 'preparing' | 'done' | 'cancelled';
+  status: 'pending' | 'done' | 'cancelled';
   customer_note?: string;
   customer_email?: string;
   created_at: string;

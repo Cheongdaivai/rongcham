@@ -7,7 +7,9 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Order, MenuItem } from '@/types'
 import { getCurrentUser, signOut } from '@/lib/auth'
-import { getAllOrders, updateOrderStatus, getAllMenuItems } from '@/lib/database'
+import { getAllOrders, updateOrderStatus, getAllMenuItems, subscribeToOrders, subscribeToMenuItems } from '@/lib/database'
+import { EnhancedVoiceControl } from '@/components/EnhancedVoiceControl'
+import { AnalyticsDashboard } from '@/components/AnalyticsDashboard'
 import { User } from '@supabase/supabase-js'
 import MenuItemModal from '@/components/MenuItemModal'
 import DeleteConfirmModal from '@/components/DeleteConfirmModal'
@@ -20,8 +22,14 @@ import {
   Package, 
   DollarSign,
   Settings,
+  Mic,
+  Volume2,
+  Brain,
+  Utensils,
+  MessageSquare,
+  Activity,
   Plus,
-  Edit,
+  Edit3,
   Trash2
 } from 'lucide-react'
 
@@ -29,7 +37,7 @@ export default function AdminDashboard() {
   const [, setUser] = useState<User | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'menu'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'menu' | 'analytics' | 'voice'>('orders')
   const [loading, setLoading] = useState(true)
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -41,6 +49,38 @@ export default function AdminDashboard() {
   useEffect(() => {
     checkAuth()
     fetchData()
+
+    // Set up real-time subscriptions
+    const ordersSubscription = subscribeToOrders((newOrder) => {
+      setOrders(prevOrders => {
+        const existingIndex = prevOrders.findIndex(order => order.order_id === newOrder.order_id)
+        if (existingIndex >= 0) {
+          const updatedOrders = [...prevOrders]
+          updatedOrders[existingIndex] = newOrder
+          return updatedOrders
+        } else {
+          return [newOrder, ...prevOrders]
+        }
+      })
+    })
+
+    const menuSubscription = subscribeToMenuItems((menuItem) => {
+      setMenuItems(prevItems => {
+        const existingIndex = prevItems.findIndex(item => item.menu_id === menuItem.menu_id)
+        if (existingIndex >= 0) {
+          const updatedItems = [...prevItems]
+          updatedItems[existingIndex] = menuItem
+          return updatedItems
+        } else {
+          return [...prevItems, menuItem]
+        }
+      })
+    })
+
+    return () => {
+      ordersSubscription?.unsubscribe()
+      menuSubscription?.unsubscribe()
+    }
   }, [])
 
   const checkAuth = async () => {
@@ -83,30 +123,29 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleAddMenuItem = () => {
-    setEditingMenuItem(null)
-    setIsMenuModalOpen(true)
+  const handleVoiceCommandResult = () => {
+    fetchData()
   }
 
-  const handleEditMenuItem = (item: MenuItem) => {
-    setEditingMenuItem(item)
-    setIsMenuModalOpen(true)
+  const handleMenuItemCreated = (item: MenuItem) => {
+    setMenuItems(prev => [...prev, item])
   }
 
-  const handleDeleteMenuItem = (item: MenuItem) => {
-    setDeletingMenuItem(item)
-    setIsDeleteModalOpen(true)
+  const handleMenuItemDeleted = (itemId: string) => {
+    setMenuItems(prev => prev.filter(item => item.menu_id !== itemId))
   }
 
+  const handleMenuItemUpdated = (updatedItem: MenuItem) => {
+    setMenuItems(prev => prev.map(item => 
+      item.menu_id === updatedItem.menu_id ? updatedItem : item
+    ))
+  }
+
+  // Additional handler functions
   const handleSaveMenuItem = async (menuItemData: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at' | 'created_by_email'>) => {
     setMenuActionLoading(true)
     try {
-      console.log('handleSaveMenuItem called with:', menuItemData)
-      console.log('editingMenuItem:', editingMenuItem)
-      
       if (editingMenuItem) {
-        // Update existing item via API
-        console.log('Updating menu item with ID:', editingMenuItem.menu_id)
         const response = await fetch('/api/menu', {
           method: 'PUT',
           headers: {
@@ -124,14 +163,10 @@ export default function AdminDashboard() {
         }
         
         const updatedItem = await response.json()
-        console.log('Update result:', updatedItem)
-        
         setMenuItems(items => items.map(item => 
           item.menu_id === editingMenuItem.menu_id ? updatedItem : item
         ))
       } else {
-        // Create new item via API
-        console.log('Creating new menu item')
         const response = await fetch('/api/menu', {
           method: 'POST',
           headers: {
@@ -146,8 +181,6 @@ export default function AdminDashboard() {
         }
         
         const newItem = await response.json()
-        console.log('Create result:', newItem)
-        
         setMenuItems(items => [...items, newItem])
       }
       setIsMenuModalOpen(false)
@@ -166,7 +199,6 @@ export default function AdminDashboard() {
     
     setMenuActionLoading(true)
     try {
-      // First, delete the menu item from database
       const response = await fetch(`/api/menu?menu_id=${deletingMenuItem.menu_id}`, {
         method: 'DELETE',
       })
@@ -176,15 +208,12 @@ export default function AdminDashboard() {
         throw new Error(errorData.error || 'Failed to delete menu item')
       }
 
-      // If the item has an image from our storage, try to delete it
       if (deletingMenuItem.image_url && deletingMenuItem.image_url.includes('/storage/v1/object/public/menu-images/')) {
         try {
-          // Extract filename from URL
           const urlParts = deletingMenuItem.image_url.split('/')
           const fileName = urlParts[urlParts.length - 1]?.split('?')[0]
           
           if (fileName) {
-            // Delete the image (don't fail the whole operation if this fails)
             await fetch(`/api/upload-image?fileName=${encodeURIComponent(fileName)}`, {
               method: 'DELETE',
             })
@@ -206,41 +235,6 @@ export default function AdminDashboard() {
     }
   }
 
-  const getStatusConfig = (status: Order['status']) => {
-    switch (status) {
-      case 'pending': 
-        return { 
-          color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-          icon: Clock,
-          label: 'Pending'
-        }
-      case 'preparing': 
-        return { 
-          color: 'bg-blue-100 text-blue-800 border-blue-200', 
-          icon: ChefHat,
-          label: 'Preparing'
-        }
-      case 'done': 
-        return { 
-          color: 'bg-green-100 text-green-800 border-green-200', 
-          icon: CheckCircle,
-          label: 'Done'
-        }
-      case 'cancelled': 
-        return { 
-          color: 'bg-red-100 text-red-800 border-red-200', 
-          icon: XCircle,
-          label: 'Cancelled'
-        }
-      default: 
-        return { 
-          color: 'bg-slate-100 text-slate-800 border-slate-200', 
-          icon: Clock,
-          label: 'Unknown'
-        }
-    }
-  }
-
   // Calculate stats
   const totalRevenue = orders.reduce((sum, order) => 
     order.status !== 'cancelled' ? sum + order.total_amount : sum, 0
@@ -248,696 +242,760 @@ export default function AdminDashboard() {
   const pendingOrders = orders.filter(order => order.status === 'pending').length
   const completedOrders = orders.filter(order => order.status === 'done').length
 
-  // Calculate menu item statistics
-  const getMenuItemStats = (menuId: string) => {
-    let totalOrdered = 0
-    let totalRevenue = 0
-    let orderCount = 0
-
-    orders.forEach(order => {
-      if (order.status !== 'cancelled' && order.order_items) {
-        order.order_items.forEach(item => {
-          if (item.menu_item?.menu_id === menuId) {
-            totalOrdered += item.quantity
-            totalRevenue += item.subtotal
-            orderCount++
-          }
-        })
-      }
-    })
-
-    return { totalOrdered, totalRevenue, orderCount }
-  }
-
-  // Calculate total items in an order
-  const getTotalItemsInOrder = (orderItems: any[]) => {
-    return orderItems.reduce((total, item) => total + item.quantity, 0)
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 animate-pulse mx-auto">
-            <ChefHat className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 animate-pulse mx-auto">
+            <ChefHat className="h-8 w-8 text-white" />
           </div>
-          <div className="text-lg sm:text-xl font-semibold text-slate-600">Loading dashboard...</div>
+          <div className="text-xl font-semibold text-slate-600">Loading dashboard...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Responsive Header */}
-      <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4 sm:gap-0">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-600 to-emerald-600 rounded-xl sm:rounded-2xl">
-                <ChefHat className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-600 rounded-2xl">
+                <ChefHat className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800">Admin Dashboard</h1>
-                <p className="text-sm sm:text-base text-slate-500">Manage your restaurant operations</p>
+                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="text-gray-600">Manage your restaurant operations</p>
               </div>
             </div>
             <Button 
               onClick={handleSignOut} 
               variant="outline"
-              size="sm"
-              className="bg-white hover:bg-red-50 border-red-200 text-red-600 hover:text-red-700 hover:border-red-300 rounded-lg sm:rounded-xl font-semibold text-sm px-3 sm:px-4"
+              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
             >
-              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <LogOut className="h-4 w-4" />
               Sign Out
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-4 lg:px-6 xl:px-8">
-        {/* Responsive Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="p-4 sm:p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 rounded-xl sm:rounded-2xl shadow-lg">
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-xs sm:text-sm font-medium">Total Revenue</p>
-                <p className="text-2xl sm:text-3xl font-bold">${totalRevenue.toFixed(2)}</p>
+                <p className="text-blue-100 text-sm font-medium">Total Revenue</p>
+                <p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p>
               </div>
-              <DollarSign className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-blue-200" />
+              <DollarSign className="h-12 w-12 text-blue-200" />
             </div>
           </Card>
           
-          <Card className="p-4 sm:p-6 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 rounded-xl sm:rounded-2xl shadow-lg">
+          <Card className="p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-xs sm:text-sm font-medium">Pending Orders</p>
-                <p className="text-2xl sm:text-3xl font-bold">{pendingOrders}</p>
+                <p className="text-orange-100 text-sm font-medium">Pending Orders</p>
+                <p className="text-3xl font-bold">{pendingOrders}</p>
               </div>
-              <Clock className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-orange-200" />
+              <Clock className="h-12 w-12 text-orange-200" />
             </div>
           </Card>
           
-          <Card className="p-4 sm:p-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 rounded-xl sm:rounded-2xl shadow-lg sm:col-span-2 lg:col-span-1">
+          <Card className="p-6 bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-xs sm:text-sm font-medium">Completed Orders</p>
-                <p className="text-2xl sm:text-3xl font-bold">{completedOrders}</p>
+                <p className="text-green-100 text-sm font-medium">Completed Orders</p>
+                <p className="text-3xl font-bold">{completedOrders}</p>
               </div>
-              <CheckCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-green-200" />
+              <CheckCircle className="h-12 w-12 text-green-200" />
             </div>
           </Card>
         </div>
 
-        {/* Responsive Tab Navigation */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex space-x-1 bg-white p-1 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200">
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
-                activeTab === 'orders'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-              }`}
-            >
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Orders</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
-                activeTab === 'history'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-              }`}
-            >
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">History</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('menu')}
-              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
-                activeTab === 'menu'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-              }`}
-            >
-              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Menu</span>
-            </button>
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
+            {[
+              { key: 'orders', label: 'Orders', icon: Package },
+              { key: 'history', label: 'History', icon: Clock },
+              { key: 'voice', label: 'Voice AI', icon: Mic },
+              { key: 'menu', label: 'Menu', icon: Settings },
+              { key: 'analytics', label: 'Analytics', icon: Activity }
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key as 'orders' | 'history' | 'voice' | 'menu' | 'analytics')}
+                className={`flex-1 py-3 px-4 sm:px-6 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                  activeTab === key
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Orders Tab - Receive Orders (Pending Only) */}
+        {/* Orders Tab */}
         {activeTab === 'orders' && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Receive Orders</h2>
-                <p className="text-sm sm:text-base text-slate-600">New incoming orders</p>
+                <h2 className="text-2xl font-bold text-gray-800">Receive Orders</h2>
+                <p className="text-gray-600">New incoming orders</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-amber-500 text-white border-0 px-3 py-1 rounded-full">
-                  {orders.filter(order => order.status === 'pending').length} pending orders
-                </Badge>
-              </div>
+              <Badge className="bg-amber-500 text-white border-0 px-3 py-1 rounded-full">
+                {pendingOrders} pending orders
+              </Badge>
             </div>
 
             {orders.filter(order => order.status === 'pending').length === 0 ? (
-              <Card className="p-8 sm:p-12 text-center bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm">
-                <Package className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No pending orders</h3>
-                <p className="text-sm sm:text-base text-slate-500">New orders will appear here when customers place them.</p>
+              <Card className="p-12 text-center bg-white border-0 rounded-2xl shadow-sm">
+                <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No pending orders</h3>
+                <p className="text-gray-500">New orders will appear here when customers place them.</p>
               </Card>
             ) : (
-              <div className="grid gap-4 sm:gap-6">
+              <div className="grid gap-6">
                 {orders
                   .filter(order => order.status === 'pending')
-                  .map((order) => {
-                    const statusConfig = getStatusConfig(order.status)
-                    const StatusIcon = statusConfig.icon
-                    
-                    return (
-                      <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
-                        {/* Status indicator */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-amber-400"></div>
-
-                        <div className="p-6">
-                          {/* Order header */}
-                          <div className="flex flex-col lg:flex-row justify-between items-start mb-6 gap-6">
-                            <div className="flex items-start gap-4 flex-1">
-                              <div className="p-3 bg-slate-100 rounded-lg flex-shrink-0">
-                                <Package className="h-6 w-6 text-slate-600" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-xl font-semibold text-slate-900">
-                                    Order #{order.order_number}
-                                  </h3>
-                                  <Badge className={`${statusConfig.color} px-3 py-1 rounded-md font-medium text-sm border flex items-center gap-2`}>
-                                    <StatusIcon className="h-4 w-4" />
-                                    {statusConfig.label}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
-                                  <Clock className="h-4 w-4" />
-                                  {new Date(order.created_at).toLocaleString()}
-                                </div>
-                                {order.customer_note && (
-                                  <div className="bg-slate-50 p-3 rounded-lg border-l-4 border-blue-400 mt-3">
-                                    <p className="text-slate-700 text-sm">
-                                      <span className="font-medium text-slate-800">Note:</span> {order.customer_note}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className="bg-slate-900 text-white px-4 py-2 rounded-lg">
-                                <div className="text-right">
-                                  <div className="text-xl font-bold">${order.total_amount.toFixed(2)}</div>
-                                  <div className="text-slate-300 text-xs">Total</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Order Items */}
-                          {order.order_items && (
-                            <div className="mb-6">
-                              {/* Items header */}
-                              <div className="bg-slate-50 p-4 rounded-lg mb-4 border border-slate-200">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <Package className="h-5 w-5 text-slate-600" />
-                                    <div>
-                                      <h4 className="font-semibold text-slate-800">Order Items</h4>
-                                      <p className="text-slate-600 text-sm">Items in this order</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-sm font-medium">
-                                      {order.order_items.length} {order.order_items.length === 1 ? 'Type' : 'Types'}
-                                    </span>
-                                    <span className="px-3 py-1 bg-slate-800 text-white rounded-md text-sm font-medium">
-                                      {getTotalItemsInOrder(order.order_items)} {getTotalItemsInOrder(order.order_items) === 1 ? 'Item' : 'Items'}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Items list */}
-                              <div className="space-y-3">
-                                {order.order_items.map((item, index) => (
-                                  <div key={item.id} className="bg-white p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-4 flex-1">
-                                        {/* Quantity */}
-                                        <div className="w-10 h-10 bg-slate-100 border border-slate-300 rounded-lg flex items-center justify-center">
-                                          <span className="text-slate-700 font-semibold">{item.quantity}</span>
-                                        </div>
-                                        
-                                        {/* Item details */}
-                                        <div className="flex-1">
-                                          <h5 className="font-medium text-slate-900 mb-1">
-                                            {item.menu_item?.name || 'Unknown Item'}
-                                          </h5>
-                                          {item.menu_item?.price && (
-                                            <p className="text-slate-500 text-sm">
-                                              ${item.menu_item.price.toFixed(2)} each
-                                            </p>
-                                          )}
-                                        </div>
-                                      </div>
-                                      
-                                      {/* Price */}
-                                      <div className="text-right">
-                                        <div className="bg-slate-800 text-white px-3 py-2 rounded-lg">
-                                          <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              {/* Total summary */}
-                              <div className="mt-4 p-4 bg-slate-800 text-white rounded-lg">
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium">Order Total</span>
-                                  <span className="text-xl font-bold">${order.total_amount.toFixed(2)}</span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Action buttons */}
-                          <div className="border-t border-slate-200 pt-4 mt-6">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                              <Button
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-medium transition-colors"
-                                onClick={() => handleOrderStatusUpdate(order.order_id, 'done')}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Mark as Complete
-                              </Button>
-                              <Button
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg py-3 font-medium transition-colors"
-                                onClick={() => handleOrderStatusUpdate(order.order_id, 'cancelled')}
-                              >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Cancel Order
-                              </Button>
-                            </div>
-                          </div>
+                  .map((order) => (
+                    <Card key={order.order_id} className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">Order #{order.order_number}</h3>
+                          <p className="text-gray-600">{new Date(order.created_at).toLocaleString()}</p>
                         </div>
-                      </Card>
-                    )
-                  })}
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-gray-900">${order.total_amount.toFixed(2)}</p>
+                          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            Pending
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      {order.order_items && (
+                        <div className="space-y-2 mb-4">
+                          {order.order_items.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                              <div>
+                                <span className="font-medium text-gray-900">{item.menu_item?.name || 'Unknown Item'}</span>
+                                <span className="text-gray-600 ml-2">x{item.quantity}</span>
+                              </div>
+                              <span className="font-semibold text-gray-900">${item.subtotal.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => handleOrderStatusUpdate(order.order_id, 'done')}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Mark as Done
+                        </Button>
+                        <Button
+                          onClick={() => handleOrderStatusUpdate(order.order_id, 'cancelled')}
+                          variant="outline"
+                          className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
               </div>
             )}
           </div>
         )}
 
-        {/* History Tab - Kanban View for Done & Cancelled Orders */}
+        {/* History Tab */}
         {activeTab === 'history' && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Order History</h2>
-                <p className="text-sm sm:text-base text-slate-600">Completed and cancelled orders</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-green-500 text-white border-0 px-3 py-1 rounded-full">
-                  {orders.filter(order => order.status === 'done').length} completed
-                </Badge>
-                <Badge className="bg-red-500 text-white border-0 px-3 py-1 rounded-full">
-                  {orders.filter(order => order.status === 'cancelled').length} cancelled
-                </Badge>
-              </div>
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Order History</h2>
+              <p className="text-gray-600">View all completed and cancelled orders</p>
             </div>
 
-            {orders.filter(order => order.status === 'done' || order.status === 'cancelled').length === 0 ? (
-              <Card className="p-8 sm:p-12 text-center bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm">
-                <Clock className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No order history</h3>
-                <p className="text-sm sm:text-base text-slate-500">Completed and cancelled orders will appear here.</p>
-              </Card>
-            ) : (
-              /* Kanban Board Layout for History */
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Completed Orders Column */}
-                <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-green-500 rounded-lg">
-                        <CheckCircle className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-green-800">Completed Orders</h3>
-                        <p className="text-sm text-green-600">Successfully completed</p>
-                      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Completed Orders Section */}
+              <div className="space-y-6">
+                <Card className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg rounded-2xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 bg-green-600 rounded-xl">
+                      <CheckCircle className="h-8 w-8 text-white" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-green-500 text-white border-0 px-3 py-1 rounded-full">
-                        {orders.filter(order => order.status === 'done').length} orders
+                    <div>
+                      <h3 className="text-2xl font-bold text-green-800">Completed Orders</h3>
+                      <p className="text-green-700">Successfully fulfilled orders</p>
+                    </div>
+                    <div className="ml-auto">
+                      <Badge className="bg-green-600 text-white px-4 py-2 text-lg font-semibold">
+                        {orders.filter(order => order.status === 'done').length}
                       </Badge>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto">
-                    {orders
-                      .filter(order => order.status === 'done')
-                      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
-                      .map((order) => (
-                        <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-green-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
-                          <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
 
-                          <div className="p-4">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                  <CheckCircle className="h-4 w-4 text-green-600" />
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-slate-900">#{order.order_number}</h4>
-                                  <p className="text-xs text-slate-500">
-                                    {new Date(order.created_at).toLocaleDateString()} {new Date(order.created_at).toLocaleTimeString()}
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {orders.filter(order => order.status === 'done').length === 0 ? (
+                      <div className="text-center py-8">
+                        <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-3" />
+                        <p className="text-green-600 font-medium">No completed orders yet</p>
+                        <p className="text-green-500 text-sm">Completed orders will appear here</p>
+                      </div>
+                    ) : (
+                      orders
+                        .filter(order => order.status === 'done')
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((order) => (
+                          <Card key={order.order_id} className="p-4 bg-white border border-green-200 rounded-xl hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-900">Order #{order.order_number}</h4>
+                                <p className="text-gray-600 text-sm">{new Date(order.created_at).toLocaleString()}</p>
+                                {order.order_items && order.order_items.length > 0 && (
+                                  <p className="text-green-700 text-sm mt-1">
+                                    {order.order_items.length} item{order.order_items.length > 1 ? 's' : ''}
                                   </p>
-                                </div>
+                                )}
                               </div>
                               <div className="text-right">
-                                <div className="bg-green-600 text-white px-3 py-1 rounded-lg">
-                                  <span className="text-lg font-bold">${order.total_amount.toFixed(2)}</span>
-                                </div>
-                                <Badge className="mt-2 bg-green-100 text-green-800 border-green-200 px-2 py-1 rounded-md text-xs">
+                                <p className="text-xl font-bold text-gray-900">${order.total_amount.toFixed(2)}</p>
+                                <Badge className="bg-green-100 text-green-800 border-green-200 text-sm">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
                                   Completed
                                 </Badge>
                               </div>
                             </div>
-
-                            {order.order_items && (
-                              <div className="mb-4">
-                                <div className="bg-slate-50 p-3 rounded-lg">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-slate-700">Items</span>
-                                    <span className="text-xs text-slate-500">
-                                      {getTotalItemsInOrder(order.order_items)} total
-                                    </span>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {order.order_items.slice(0, 3).map((item) => (
-                                      <div key={item.id} className="flex justify-between text-sm">
-                                        <span className="text-slate-700">
-                                          {item.quantity}x {item.menu_item?.name || 'Unknown'}
-                                        </span>
-                                        <span className="font-medium">${item.subtotal.toFixed(2)}</span>
-                                      </div>
-                                    ))}
-                                    {order.order_items.length > 3 && (
-                                      <p className="text-xs text-slate-500">
-                                        +{order.order_items.length - 3} more items
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {order.customer_note && (
-                              <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                                <p className="text-sm text-blue-800">
-                                  <span className="font-medium">Note:</span> {order.customer_note}
-                                </p>
-                              </div>
-                            )}
-
-                            <div className="bg-green-50 border border-green-200 rounded-lg py-3 px-4">
-                              <div className="flex items-center justify-center gap-2 text-green-700">
-                                <CheckCircle className="w-4 h-4" />
-                                <span className="text-sm font-medium">Order Completed</span>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                      
-                    {orders.filter(order => order.status === 'done').length === 0 && (
-                      <div className="text-center py-8">
-                        <CheckCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">No completed orders</p>
-                      </div>
+                          </Card>
+                        ))
                     )}
                   </div>
-                </div>
+                </Card>
+              </div>
 
-                {/* Cancelled Orders Column */}
-                <div className="space-y-4">
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-red-500 rounded-lg">
-                        <XCircle className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-red-800">Cancelled Orders</h3>
-                        <p className="text-sm text-red-600">Orders that were cancelled</p>
-                      </div>
+              {/* Cancelled Orders Section */}
+              <div className="space-y-6">
+                <Card className="p-6 bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 shadow-lg rounded-2xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 bg-red-600 rounded-xl">
+                      <XCircle className="h-8 w-8 text-white" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-red-500 text-white border-0 px-3 py-1 rounded-full">
-                        {orders.filter(order => order.status === 'cancelled').length} orders
+                    <div>
+                      <h3 className="text-2xl font-bold text-red-800">Cancelled Orders</h3>
+                      <p className="text-red-700">Orders that were cancelled</p>
+                    </div>
+                    <div className="ml-auto">
+                      <Badge className="bg-red-600 text-white px-4 py-2 text-lg font-semibold">
+                        {orders.filter(order => order.status === 'cancelled').length}
                       </Badge>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto">
-                    {orders
-                      .filter(order => order.status === 'cancelled')
-                      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
-                      .map((order) => (
-                        <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-red-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
-                          <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
 
-                          <div className="p-4">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-red-100 rounded-lg">
-                                  <XCircle className="h-4 w-4 text-red-600" />
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-slate-900">#{order.order_number}</h4>
-                                  <p className="text-xs text-slate-500">
-                                    {new Date(order.created_at).toLocaleDateString()} {new Date(order.created_at).toLocaleTimeString()}
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {orders.filter(order => order.status === 'cancelled').length === 0 ? (
+                      <div className="text-center py-8">
+                        <XCircle className="h-12 w-12 text-red-300 mx-auto mb-3" />
+                        <p className="text-red-600 font-medium">No cancelled orders</p>
+                        <p className="text-red-500 text-sm">Cancelled orders will appear here</p>
+                      </div>
+                    ) : (
+                      orders
+                        .filter(order => order.status === 'cancelled')
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((order) => (
+                          <Card key={order.order_id} className="p-4 bg-white border border-red-200 rounded-xl hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-900">Order #{order.order_number}</h4>
+                                <p className="text-gray-600 text-sm">{new Date(order.created_at).toLocaleString()}</p>
+                                {order.order_items && order.order_items.length > 0 && (
+                                  <p className="text-red-700 text-sm mt-1">
+                                    {order.order_items.length} item{order.order_items.length > 1 ? 's' : ''}
                                   </p>
-                                </div>
+                                )}
                               </div>
                               <div className="text-right">
-                                <div className="bg-red-600 text-white px-3 py-1 rounded-lg">
-                                  <span className="text-lg font-bold">${order.total_amount.toFixed(2)}</span>
-                                </div>
-                                <Badge className="mt-2 bg-red-100 text-red-800 border-red-200 px-2 py-1 rounded-md text-xs">
+                                <p className="text-xl font-bold text-gray-900">${order.total_amount.toFixed(2)}</p>
+                                <Badge className="bg-red-100 text-red-800 border-red-200 text-sm">
+                                  <XCircle className="h-3 w-3 mr-1" />
                                   Cancelled
                                 </Badge>
                               </div>
                             </div>
-
-                            {order.order_items && (
-                              <div className="mb-4">
-                                <div className="bg-slate-50 p-3 rounded-lg">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-slate-700">Items</span>
-                                    <span className="text-xs text-slate-500">
-                                      {getTotalItemsInOrder(order.order_items)} total
-                                    </span>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {order.order_items.slice(0, 3).map((item) => (
-                                      <div key={item.id} className="flex justify-between text-sm">
-                                        <span className="text-slate-700">
-                                          {item.quantity}x {item.menu_item?.name || 'Unknown'}
-                                        </span>
-                                        <span className="font-medium">${item.subtotal.toFixed(2)}</span>
-                                      </div>
-                                    ))}
-                                    {order.order_items.length > 3 && (
-                                      <p className="text-xs text-slate-500">
-                                        +{order.order_items.length - 3} more items
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {order.customer_note && (
-                              <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                                <p className="text-sm text-blue-800">
-                                  <span className="font-medium">Note:</span> {order.customer_note}
-                                </p>
-                              </div>
-                            )}
-
-                            <div className="bg-red-50 border border-red-200 rounded-lg py-3 px-4">
-                              <div className="flex items-center justify-center gap-2 text-red-700">
-                                <XCircle className="w-4 h-4" />
-                                <span className="text-sm font-medium">Order Cancelled</span>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                      
-                    {orders.filter(order => order.status === 'cancelled').length === 0 && (
-                      <div className="text-center py-8">
-                        <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">No cancelled orders</p>
-                      </div>
+                          </Card>
+                        ))
                     )}
                   </div>
+                </Card>
+              </div>
+            </div>
+
+            {/* Summary Stats */}
+            <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-lg rounded-2xl">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Order Summary</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
+                  <div className="text-2xl font-bold text-gray-900">{orders.filter(order => order.status !== 'pending').length}</div>
+                  <div className="text-gray-600 text-sm">Total Processed</div>
+                </div>
+                <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
+                  <div className="text-2xl font-bold text-green-600">{orders.filter(order => order.status === 'done').length}</div>
+                  <div className="text-gray-600 text-sm">Completed</div>
+                </div>
+                <div className="text-center p-4 bg-white rounded-xl border border-gray-200">
+                  <div className="text-2xl font-bold text-red-600">{orders.filter(order => order.status === 'cancelled').length}</div>
+                  <div className="text-gray-600 text-sm">Cancelled</div>
                 </div>
               </div>
-            )}
+            </Card>
           </div>
         )}
 
         {/* Menu Tab */}
         {activeTab === 'menu' && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Menu Management</h2>
-                <p className="text-sm sm:text-base text-slate-600">Manage your restaurant's menu items</p>
+                <h2 className="text-2xl font-bold text-gray-800">Menu Management</h2>
+                <p className="text-gray-600">Manage your restaurant menu items</p>
               </div>
-              <Button 
-                onClick={handleAddMenuItem}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm px-4 py-2 w-full sm:w-auto"
+              <Button
+                onClick={() => {
+                  setEditingMenuItem(null)
+                  setIsMenuModalOpen(true)
+                }}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all"
               >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
                 Add Menu Item
               </Button>
             </div>
-            
+
             {menuItems.length === 0 ? (
-              <Card className="p-8 sm:p-12 text-center bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm">
-                <Settings className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No menu items</h3>
-                <p className="text-sm sm:text-base text-slate-500">Add your first menu item to get started.</p>
+              <Card className="p-12 text-center bg-white border-0 rounded-2xl shadow-sm">
+                <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No menu items yet</h3>
+                <p className="text-gray-500">Create your first menu item using the button above.</p>
               </Card>
             ) : (
               <div className="grid gap-6">
-                {menuItems.map((item, index) => (
-                  <Card key={item.menu_id} className="group relative overflow-hidden bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 transform hover:scale-[1.02]">
-                    {/* Modern Card Layout */}
-                    <div className="flex flex-col lg:flex-row">
-                      {/* Left: Image Section */}
-                      <div className="relative lg:w-80 h-48 lg:h-auto flex-shrink-0">
-                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 transparency-checker">
-                          {item.image_url ? (
-                            <div className="w-full h-full flex items-center justify-center p-4">
-                              <img 
-                                src={item.image_url} 
-                                alt={item.name}
-                                className="max-w-full max-h-full object-contain food-image transparent-optimized transparent-shadow group-hover:scale-110 transition-transform duration-700"
-                                style={{
-                                  imageRendering: 'crisp-edges'
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div className="text-center text-white/80">
-                                <ChefHat className="h-16 w-16 mx-auto mb-4 opacity-60" />
-                                <p className="text-sm font-medium">No Image</p>
-                              </div>
-                            </div>
-                          )}
-                          {/* Overlay gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-                        </div>
-                        
-                        {/* Image badges */}
-                        <div className="absolute top-4 left-4 flex flex-col gap-2">
-                          <div className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full">
-                            <span className="text-xs font-bold text-slate-800">#{index + 1}</span>
+                {menuItems.map((item) => (
+                  <Card key={item.menu_id} className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        {item.image_url && (
+                          <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden mb-4 float-right ml-4">
+                            <img 
+                              src={item.image_url} 
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                          <Badge className={`${
-                            item.availability 
-                              ? 'bg-green-500 hover:bg-green-600' 
-                              : 'bg-red-500 hover:bg-red-600'
-                          } text-white border-0 px-3 py-1.5 rounded-full font-semibold text-xs shadow-lg`}>
-                            {item.availability ? (
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                                Available
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1.5">
-                                <XCircle className="h-3 w-3" />
-                                Unavailable
-                              </div>
-                            )}
+                        )}
+                        <h3 className="text-xl font-bold text-gray-900">{item.name}</h3>
+                        <p className="text-gray-600 mt-2">{item.description}</p>
+                        <div className="flex items-center gap-4 mt-4">
+                          <p className="text-2xl font-bold text-gray-900">
+                            ${item.price.toFixed(2)}
+                          </p>
+                          <Badge 
+                            className={item.availability 
+                              ? 'bg-green-100 text-green-800 border-green-200' 
+                              : 'bg-red-100 text-red-800 border-red-200'
+                            }
+                          >
+                            {item.availability ? 'Available' : 'Unavailable'}
                           </Badge>
-                        </div>
-
-                        {/* Price badge */}
-                        <div className="absolute bottom-4 right-4">
-                          <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-lg">
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4 text-green-600" />
-                              <span className="text-2xl font-bold text-green-600">{item.price.toFixed(2)}</span>
-                            </div>
-                          </div>
+                          <p className="text-sm text-gray-500">
+                            Total ordered: {item.total_ordered || 0}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2 sm:gap-3 w-full sm:w-auto">
-                        <Badge className={`${item.availability ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'} px-2 sm:px-4 py-1 sm:py-2 rounded-full font-semibold text-xs sm:text-sm border`}>
-                          {item.availability ? 'Available' : 'Unavailable'}
-                        </Badge>
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleEditMenuItem(item)}
-                            className="rounded-lg sm:rounded-xl border-slate-300 hover:border-blue-300 hover:text-blue-600 text-xs px-2 sm:px-3"
-                          >
-                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            <span className="hidden xs:inline">Edit</span>
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleDeleteMenuItem(item)}
-                            className="bg-red-600 hover:bg-red-700 text-white rounded-lg sm:rounded-xl text-xs px-2 sm:px-3"
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            <span className="hidden xs:inline">Delete</span>
-                          </Button>
-                        </div>
+                      
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setEditingMenuItem(item)
+                            setIsMenuModalOpen(true)
+                          }}
+                          variant="outline"
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setDeletingMenuItem(item)
+                            setIsDeleteModalOpen(true)
+                          }}
+                          variant="outline"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
+                          disabled={menuActionLoading}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Hover accent line */}
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <span>ID: {item.menu_id}</span>
+                        <span>Created: {new Date(item.created_at).toLocaleDateString()}</span>
+                        {item.created_by_email && (
+                          <span className="sm:col-span-2">Created by: {item.created_by_email}</span>
+                        )}
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
             )}
           </div>
         )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div>
+            <AnalyticsDashboard />
+          </div>
+        )}
+
+        {/* Voice AI Tab */}
+        {activeTab === 'voice' && (
+          <div className="space-y-8">
+            {/* Header */}
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="p-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-lg">
+                  <Brain className="h-10 w-10 text-white" />
+                </div>
+                <div className="text-left">
+                  <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">AI Voice Control Center</h2>
+                  <p className="text-gray-600 text-lg">Manage your restaurant with intelligent voice commands</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Orders Section for Voice Commands */}
+            <div className="max-w-6xl mx-auto">
+              <Card className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800">Voice Command Orders</h3>
+                    <p className="text-gray-600">Use voice commands to manage these pending orders</p>
+                  </div>
+                  <Badge className="bg-amber-500 text-white border-0 px-4 py-2 rounded-full text-sm font-semibold">
+                    {pendingOrders} pending orders
+                  </Badge>
+                </div>
+
+                {orders.filter(order => order.status === 'pending').length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h4 className="text-xl font-semibold text-gray-600 mb-2">No pending orders</h4>
+                    <p className="text-gray-500">New orders will appear here for voice command management.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {orders
+                      .filter(order => order.status === 'pending')
+                      .map((order) => (
+                        <Card key={order.order_id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="text-lg font-bold text-gray-900">Order #{order.order_number}</h4>
+                              <p className="text-gray-600 text-sm">{new Date(order.created_at).toLocaleString()}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xl font-bold text-gray-900">${order.total_amount.toFixed(2)}</p>
+                              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">
+                                Pending
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          {order.order_items && (
+                            <div className="space-y-1 mb-3">
+                              {order.order_items.map((item, index) => (
+                                <div key={index} className="flex justify-between items-center py-1 text-sm">
+                                  <div>
+                                    <span className="font-medium text-gray-900">{item.menu_item?.name || 'Unknown Item'}</span>
+                                    <span className="text-gray-600 ml-2">x{item.quantity}</span>
+                                  </div>
+                                  <span className="font-semibold text-gray-900">${item.subtotal.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Voice Command Examples for this order */}
+                          <div className="bg-white rounded-lg p-3 border border-blue-200">
+                            <p className="text-xs font-semibold text-blue-800 mb-2">Voice Commands for this order:</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                              <div className="bg-green-50 rounded px-2 py-1 border border-green-200">
+                                <span className="font-mono text-green-700">&quot;System, mark order {order.order_number} as done. Over.&quot;</span>
+                              </div>
+                              <div className="bg-red-50 rounded px-2 py-1 border border-red-200">
+                                <span className="font-mono text-red-700">&quot;System, cancel order {order.order_number}. Over.&quot;</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Clean Voice Control Container */}
+            <div className="max-w-6xl mx-auto">
+              <Card className="p-8 lg:p-12 bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-100 shadow-xl">
+                {/* Voice Control Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                  {/* Left: Voice Control Interface */}
+                  <div className="space-y-6">
+                    <div className="text-center lg:text-left">
+                      <div className="inline-flex items-center gap-3 p-4 bg-purple-100 rounded-2xl mb-6">
+                        <div className="p-3 bg-purple-600 rounded-xl">
+                          <Mic className="h-8 w-8 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900">Voice Command Center</h3>
+                          <p className="text-purple-700 font-medium">Speak naturally to control your restaurant</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Enhanced Voice Control Component */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                      <EnhancedVoiceControl 
+                        onCommandProcessed={handleVoiceCommandResult} 
+                        autoStart={false}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right: Voice Command Examples */}
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Voice Command Examples</h3>
+                        <p className="text-sm text-gray-600">Try these example commands</p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        {/* Order Management Examples */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm">
+                              <Package className="h-5 w-5 text-white" />
+                            </div>
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-800">Order Management</h4>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border-l-4 border-blue-500 hover:shadow-sm transition-shadow">
+                              <p className="text-xs sm:text-sm font-mono text-gray-700 break-words">
+                                &quot;<span className="text-blue-600 font-bold">System</span>, how many pending orders? <span className="text-blue-600 font-bold">Over.</span>&quot;
+                              </p>
+                            </div>
+                            <div className="p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border-l-4 border-green-500 hover:shadow-sm transition-shadow">
+                              <p className="text-xs sm:text-sm font-mono text-gray-700 break-words">
+                                &quot;<span className="text-green-600 font-bold">System</span>, mark order 7 as done. <span className="text-green-600 font-bold">Over.</span>&quot;
+                              </p>
+                            </div>
+                            <div className="p-3 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border-l-4 border-red-500 hover:shadow-sm transition-shadow">
+                              <p className="text-xs sm:text-sm font-mono text-gray-700 break-words">
+                                &quot;<span className="text-red-600 font-bold">System</span>, cancel order 5. <span className="text-red-600 font-bold">Over.</span>&quot;
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Analytics Examples */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-sm">
+                              <Activity className="h-5 w-5 text-white" />
+                            </div>
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-800">Analytics & Reports</h4>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border-l-4 border-purple-500 hover:shadow-sm transition-shadow">
+                              <p className="text-xs sm:text-sm font-mono text-gray-700 break-words">
+                                &quot;<span className="text-purple-600 font-bold">System</span>, what are our popular items? <span className="text-purple-600 font-bold">Over.</span>&quot;
+                              </p>
+                            </div>
+                            <div className="p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-l-4 border-orange-500 hover:shadow-sm transition-shadow">
+                              <p className="text-xs sm:text-sm font-mono text-gray-700 break-words">
+                                &quot;<span className="text-orange-600 font-bold">System</span>, show today&apos;s revenue. <span className="text-orange-600 font-bold">Over.</span>&quot;
+                              </p>
+                            </div>
+                            <div className="p-3 bg-gradient-to-r from-teal-50 to-teal-100 rounded-xl border-l-4 border-teal-500 hover:shadow-sm transition-shadow">
+                              <p className="text-xs sm:text-sm font-mono text-gray-700 break-words">
+                                &quot;<span className="text-teal-600 font-bold">System</span>, how many completed orders? <span className="text-teal-600 font-bold">Over.</span>&quot;
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quick Tip */}
+                        <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 bg-indigo-500 rounded-lg flex-shrink-0">
+                              <Utensils className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <h5 className="font-semibold text-indigo-800 text-sm mb-1">Pro Tip:</h5>
+                              <p className="text-xs text-indigo-700 leading-relaxed">
+                                Speak clearly and pause briefly between &quot;System&quot; and your command, then pause before saying &quot;Over&quot; for best results.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How it Works - Bottom Section */}
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    {/* Left: How it Works Instructions */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-blue-600 rounded-lg">
+                          <Volume2 className="h-6 w-6 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">How Voice Commands Work</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                          <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-3">1</div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Say "System"</h4>
+                          <p className="text-sm text-gray-600">Activate command mode</p>
+                        </div>
+                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                          <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-3">2</div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Speak Command</h4>
+                          <p className="text-sm text-gray-600">Give your instruction</p>
+                        </div>
+                        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                          <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-3">3</div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Say "Over"</h4>
+                          <p className="text-sm text-gray-600">Complete the command</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-yellow-500 rounded-lg">
+                            <Utensils className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <h5 className="font-semibold text-yellow-800 mb-1">Important:</h5>
+                            <p className="text-sm text-yellow-700">Always start with "System" and end with "Over" for accurate recognition. Speak clearly and wait for responses.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Quick Status Cards */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg">
+                          <div className="text-center">
+                            <Mic className="h-10 w-10 mx-auto mb-3 text-purple-200" />
+                            <p className="text-purple-100 text-sm font-medium">Voice Status</p>
+                            <p className="text-2xl font-bold">Ready</p>
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-2xl shadow-lg">
+                          <div className="text-center">
+                            <Brain className="h-10 w-10 mx-auto mb-3 text-green-200" />
+                            <p className="text-green-100 text-sm font-medium">AI Status</p>
+                            <p className="text-2xl font-bold">Online</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Additional helpful info */}
+                      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg">
+                        <div className="text-center">
+                          <MessageSquare className="h-10 w-10 mx-auto mb-3 text-blue-200" />
+                          <p className="text-blue-100 text-sm font-medium">Commands Available</p>
+                          <p className="text-2xl font-bold">24/7</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Features Overview */}
+            <div className="max-w-6xl mx-auto">
+              <Card className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-200 shadow-lg">
+                <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">🚀 Voice AI Features</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-6 bg-white rounded-2xl shadow-md border border-gray-100">
+                    <div className="p-4 bg-green-500 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <CheckCircle className="h-10 w-10 text-white" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Natural Language</h4>
+                    <p className="text-gray-600">Speak naturally - our AI understands context and intent perfectly</p>
+                  </div>
+                  
+                  <div className="text-center p-6 bg-white rounded-2xl shadow-md border border-gray-100">
+                    <div className="p-4 bg-blue-500 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Activity className="h-10 w-10 text-white" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Real-time Updates</h4>
+                    <p className="text-gray-600">Changes reflect immediately across your entire dashboard</p>
+                  </div>
+                  
+                  <div className="text-center p-6 bg-white rounded-2xl shadow-md border border-gray-100">
+                    <div className="p-4 bg-purple-500 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Brain className="h-10 w-10 text-white" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Smart Responses</h4>
+                    <p className="text-gray-600">Get intelligent feedback and confirmations from the AI</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* Menu Item Modal */}
+      {/* Modals */}
       <MenuItemModal
         isOpen={isMenuModalOpen}
         onClose={() => {
           setIsMenuModalOpen(false)
           setEditingMenuItem(null)
         }}
-        onSave={handleSaveMenuItem}
+        onSave={async (data) => {
+          await handleSaveMenuItem(data)
+        }}
         editingItem={editingMenuItem}
         isLoading={menuActionLoading}
       />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => {

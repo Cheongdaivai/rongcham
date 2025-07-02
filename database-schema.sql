@@ -7,6 +7,7 @@ CREATE TABLE menu_item (
     image_url TEXT,
     description TEXT,
     created_by_email VARCHAR(255),
+    total_ordered INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -16,7 +17,7 @@ CREATE TABLE orders (
     order_id SERIAL PRIMARY KEY,
     order_number INTEGER GENERATED ALWAYS AS IDENTITY,
     total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'done', 'cancelled')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'done', 'cancelled')),
     customer_note TEXT,
     customer_email VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -193,6 +194,29 @@ CREATE TRIGGER trigger_set_user_email_menu_item
 CREATE TRIGGER trigger_set_user_email_order
     BEFORE INSERT ON orders
     FOR EACH ROW EXECUTE FUNCTION set_user_email_on_order();
+
+-- Function to update menu item total_ordered count when order status changes to 'done'
+CREATE OR REPLACE FUNCTION update_menu_total_ordered_on_done()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Only increment when order status changes to 'done'
+    IF NEW.status = 'done' AND (OLD.status IS NULL OR OLD.status != 'done') THEN
+        -- Update total_ordered for all menu items in this order
+        UPDATE menu_item 
+        SET total_ordered = total_ordered + oi.quantity
+        FROM order_item oi
+        WHERE menu_item.menu_id = oi.menu_id 
+        AND oi.order_id = NEW.order_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update menu item total_ordered when order status changes to 'done'
+CREATE TRIGGER trigger_update_menu_total_ordered_on_done
+    AFTER UPDATE ON orders
+    FOR EACH ROW EXECUTE FUNCTION update_menu_total_ordered_on_done();
 
 -- Insert some sample menu items
 INSERT INTO menu_item (name, price, availability, description) VALUES

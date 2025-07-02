@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signInWithEmail } from '@/lib/auth'
 import { Mail, Lock, Star, ChefHat, Shield, Award } from 'lucide-react'
-import Link from 'next/link'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')

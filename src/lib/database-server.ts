@@ -49,7 +49,7 @@ export async function getAllMenuItemsServer(businessEmail?: string): Promise<Men
 
   // Add email filter if provided
   if (businessEmail) {
-    query = query.eq('business_email', businessEmail)
+    query = query.eq('created_by_email', businessEmail)
   }
 
   const { data, error } = await query.order('name')
@@ -172,7 +172,7 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
       .from('orders')
       .insert({
         customer_note: customerNote,
-        business_email: businessEmail,
+        customer_email: businessEmail,
         status: 'pending'
       })
       .select()

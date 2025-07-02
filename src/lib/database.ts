@@ -234,7 +234,7 @@ export async function getOrderById(order_id: number): Promise<Order | null> {
   }
 }
 
-export async function getAllOrders(): Promise<Order[]> {
+export async function getAllOrders(includeMenuDetails = true): Promise<Order[]> {
   try {
     const supabase = getSupabaseClient()
     
@@ -244,8 +244,7 @@ export async function getAllOrders(): Promise<Order[]> {
       .select(`
         *,
         order_items:order_item(
-          *,
-          menu_item(*)
+          *${includeMenuDetails ? ',\n          menu_item(*)' : ''}
         )
       `)
       .order('created_at', { ascending: false })
@@ -262,6 +261,16 @@ export async function getAllOrders(): Promise<Order[]> {
   }
 }
 
+// Fast query for order lists
+export async function getOrdersList(): Promise<Order[]> {
+  return getAllOrders(false)
+}
+
+// Detailed query for specific orders
+export async function getOrdersWithDetails(): Promise<Order[]> {
+  return getAllOrders(true)
+}
+
 export async function getPendingOrders(): Promise<Order[]> {
   try {
     const supabase = getSupabaseClient()
@@ -276,7 +285,7 @@ export async function getPendingOrders(): Promise<Order[]> {
           menu_item(*)
         )
       `)
-      .in('status', ['pending', 'preparing'])
+      .in('status', ['pending'])
       .order('created_at', { ascending: true })
 
     if (error) {
