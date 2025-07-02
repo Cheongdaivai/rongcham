@@ -2,7 +2,6 @@
 
 import { useCart } from '@/contexts/CartContext';
 import { ShoppingCart } from 'lucide-react';
-import { Badge } from './ui/badge';
 import { useState, useEffect } from 'react';
 import { StickyCartDrawer } from './StickyCartDrawer';
 
@@ -52,25 +51,17 @@ export function StickyCart() {
   return (
     <>
       {/* Enhanced Sticky Cart Icon */}
-      <div 
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 cursor-pointer group cart-button"
-        onClick={handleCartClick}
-      >
+      <div className="sticky-cart-enhanced cart-button" onClick={handleCartClick}>
         <div className="relative">
-          <div className={`
-            p-3 sm:p-4 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full shadow-xl sm:shadow-2xl 
-            hover:shadow-3xl transition-all duration-300 hover:scale-110 active:scale-95
-            border-2 sm:border-4 border-white backdrop-blur-sm cart-transition
-            ${itemCount > 0 ? 'animate-glow' : ''}
-          `}>
+          <div className={`sticky-cart-button cart-transition ${itemCount > 0 ? 'has-items' : ''}`}>
             <ShoppingCart className={`h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white ${itemCount > 0 ? 'animate-bounce' : ''}`} />
           </div>
           
           {/* Responsive Cart Badge */}
           {itemCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0 flex items-center justify-center text-xs sm:text-sm font-bold bg-gradient-to-r from-red-500 to-red-600 text-white border-2 sm:border-3 border-white shadow-lg animate-bounce-in min-w-[1.5rem] sm:min-w-[1.75rem] md:min-w-[2rem]">
+            <div className="cart-badge animate-bounce-in">
               {itemCount > 99 ? '99+' : itemCount}
-            </Badge>
+            </div>
           )}
         </div>
         

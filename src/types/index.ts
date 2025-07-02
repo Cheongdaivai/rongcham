@@ -8,6 +8,8 @@ export interface MenuItem {
   created_by_email?: string;
   created_at: string;
   updated_at: string;
+  rating?: number;
+  chef_signature?: string;
 }
 
 export interface Order {

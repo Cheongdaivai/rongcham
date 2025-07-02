@@ -412,21 +412,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Premium Text Utilities */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
 /* Luxury Glass Morphism Effects */
 .glass-luxury {
@@ -914,3 +900,1211 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ======================================== */
+
+/* Enhanced Cube Rotation Animations */
+@keyframes smoothRotateX {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(360deg); }
+}
+
+@keyframes smoothRotateY {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+@keyframes smoothRotateZ {
+  0% { transform: rotateZ(0deg); }
+  100% { transform: rotateZ(360deg); }
+}
+
+/* Cube glow effect for Cambodia flag colors */
+@keyframes cambodiaGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(239, 68, 68, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      0 0 60px rgba(30, 41, 59, 0.1);
+  }
+  50% { 
+    box-shadow: 
+      0 0 40px rgba(239, 68, 68, 0.5),
+      0 0 60px rgba(59, 130, 246, 0.4),
+      0 0 80px rgba(30, 41, 59, 0.2);
+  }
+}
+
+.animate-cambodia-glow {
+  animation: cambodiaGlow 3s ease-in-out infinite;
+}
+
+/* Enhanced Card Hover Animations */
+.card-enhance-hover {
+  transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.card-enhance-hover:hover {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow: 
+    0 32px 64px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 20px rgba(251, 191, 36, 0.2);
+}
+
+/* Smooth Card Entry Animation */
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-slide-in {
+  animation: cardSlideIn 0.8s ease-out forwards;
+}
+
+/* Premium Button Animations */
+.btn-premium-effect {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(45deg, #1e293b, #334155, #475569);
+  background-size: 300% 300%;
+  transition: all 0.4s ease;
+}
+
+.btn-premium-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.btn-premium-effect:hover::before {
+  left: 100%;
+}
+
+.btn-premium-effect:hover {
+  background-position: 100% 100%;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+/* Text Enhancement Animations */
+.text-shimmer {
+  background: linear-gradient(90deg, #1e293b, #fbbf24, #1e293b);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 3s ease-in-out infinite;
+}
+
+@keyframes shimmer-text {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+}
+
+/* Enhanced Line Clamp for Better Content Display */
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-5 {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Responsive Text and Layout Utilities */
+.word-wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.text-responsive {
+  word-spacing: normal;
+  line-height: 1.5;
+}
+
+/* Card Responsive Height Management */
+.card-responsive-height {
+  min-height: fit-content;
+  height: auto;
+}
+
+/* Smooth Scrollbar for Description */
+.description-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.description-scroll::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 2px;
+}
+
+.description-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 2px;
+}
+
+.description-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Equal Height Card Grid */
+.equal-height-grid {
+  display: grid;
+  grid-auto-rows: 1fr;
+}
+
+.equal-height-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Compact Equal Height Management */
+@media (max-width: 640px) {
+  .equal-height-card {
+    height: 420px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .equal-height-card {
+    height: 440px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .equal-height-card {
+    height: 460px;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .equal-height-card {
+    height: 480px;
+  }
+}
+
+@media (min-width: 1281px) {
+  .equal-height-card {
+    height: 500px;
+  }
+}
+
+/* Horizontal Scrollable Cards */
+.scrollbar-hidden {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Line Clamp Utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth Hover Effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Card Shadow Effects */
+.shadow-3xl {
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Border width utilities */
+.border-3 {
+  border-width: 3px;
+}
+
+/* Transparent Image Support */
+.transparent-image-container {
+  background: 
+    linear-gradient(45deg, #f8fafc 25%, transparent 25%), 
+    linear-gradient(-45deg, #f8fafc 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #f8fafc 75%), 
+    linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Image Format Support */
+.format-support img {
+  /* Enhanced rendering for all image formats */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* PNG/WebP/SVG specific optimizations */
+.transparent-optimized {
+  /* Better antialiasing for transparent images */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Food image specific styling */
+.food-image {
+  mix-blend-mode: normal;
+  isolation: isolate;
+}
+
+/* Enhanced drop shadow for transparent images */
+.transparent-shadow {
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.15)) 
+          drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
+}
+
+/* Checkerboard pattern for transparency visualization */
+.transparency-checker {
+  background: transparent !important;
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Only show checker pattern in admin interface */
+.admin-interface .transparency-checker {
+  background-image: 
+    linear-gradient(45deg, #f1f5f9 25%, transparent 25%), 
+    linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #f1f5f9 75%), 
+    linear-gradient(-45deg, transparent 75%, #f1f5f9 75%) !important;
+  background-size: 16px 16px !important;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+}
+
+/* Image error state styling */
+.image-error {
+  background: linear-gradient(45deg, #fee2e2, #fecaca);
+  border: 2px dashed #ef4444;
+  opacity: 0.7;
+}
+
+/* Pop-out Image Effects */
+.pop-out-image {
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.15));
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pop-out-image:hover {
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.25));
+  transform: scale(1.05);
+}
+
+/* Card container overflow management */
+.card-container-overflow {
+  overflow: visible !important;
+}
+
+/* Enhanced card spacing for pop-out images */
+.card-grid-spacing {
+  padding-top: 4rem;
+}
+
+@media (min-width: 640px) {
+  .card-grid-spacing {
+    padding-top: 5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .card-grid-spacing {
+    padding-top: 6rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid-spacing {
+    padding-top: 7rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .card-grid-spacing {
+    padding-top: 8rem;
+  }
+}
+
+/* ======================================== */
+
+/* ======================================== */
+/* ENHANCED TRANSPARENCY SUPPORT */
+/* ======================================== */
+
+/* Base transparent image styling */
+.transparent-image {
+  /* Remove any background colors that might interfere */
+  background: transparent !important;
+  /* Ensure sharp edges for PNG images */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* Better antialiasing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Enhanced drop shadow for floating effect */
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.12)) 
+          drop-shadow(0 3px 8px rgba(0, 0, 0, 0.08));
+}
+
+/* Solid image styling for JPEG */
+.solid-image {
+  /* Standard rendering for solid images */
+  image-rendering: auto;
+  /* Subtle shadow for solid images */
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+/* Container for transparent images - NO BACKGROUND */
+.transparent-container {
+  background: transparent !important;
+  /* Remove any patterns or backgrounds */
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Container for solid images - with subtle background */
+.solid-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Enhanced checkerboard - ONLY for admin preview */
+.admin-transparency-preview {
+  background-image: 
+    linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+    linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+    linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+}
+
+/* Food image general styling */
+.food-image {
+  /* Ensure proper isolation */
+  isolation: isolate;
+  /* Smooth transitions */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover effects for transparent images */
+.transparent-image:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 12px 25px rgba(0, 0, 0, 0.15)) 
+          drop-shadow(0 5px 12px rgba(0, 0, 0, 0.1));
+}
+
+/* Hover effects for solid images */
+.solid-image:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15));
+}
+
+/* Format-specific optimizations */
+.png-image {
+  /* PNG-specific optimizations */
+  image-rendering: crisp-edges;
+  -webkit-image-rendering: crisp-edges;
+}
+
+.webp-image {
+  /* WebP-specific optimizations */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.svg-image {
+  /* SVG-specific optimizations */
+  image-rendering: auto;
+  shape-rendering: geometricPrecision;
+}
+
+.jpg-image, .jpeg-image {
+  /* JPEG-specific optimizations */
+  image-rendering: auto;
+}
+
+/* Remove old conflicting classes */
+.transparency-checker {
+  /* Only use this class for admin previews, not in main menu */
+  display: none;
+}
+
+/* Show transparency checker only in admin interface */
+.admin-interface .transparency-checker {
+  display: block;
+  background-image: 
+    linear-gradient(45deg, #f1f5f9 25%, transparent 25%), 
+    linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #f1f5f9 75%), 
+    linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* ======================================== */
+
+/* Cart Animation Styles */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), 0 0 40px rgba(16, 185, 129, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.8), 0 0 60px rgba(16, 185, 129, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes item-add-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.item-add-animation {
+  animation: item-add-pulse 0.6s ease-out;
+}
+
+.cart-transition {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cart-backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+/* Enhanced Cart Count Indicator */
+.cart-count-float {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+/* Menu Grid Cart Connection Indicator */
+.menu-cart-connection {
+  position: relative;
+}
+
+.menu-cart-connection::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.menu-cart-connection.item-added::after {
+  opacity: 1;
+  transform: scale(1);
+  animation: bounce-in 0.6s ease;
+}
+
+/* Enhanced Sticky Cart Styles */
+.sticky-cart-enhanced {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 50;
+  cursor: pointer;
+}
+
+.sticky-cart-button {
+  position: relative;
+  padding: 16px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-radius: 50%;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.2),
+    0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sticky-cart-button:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.3),
+    0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.sticky-cart-button.has-items {
+  background: linear-gradient(135deg, #059669, #10b981);
+  animation: glow 2s ease-in-out infinite;
+}
+
+.sticky-cart-button.has-items:hover {
+  background: linear-gradient(135deg, #047857, #059669);
+}
+
+/* Cart Badge Styling */
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: bounce-in 0.6s ease;
+}
+
+.cart-badge.animate-number {
+  animation: item-add-pulse 0.6s ease;
+}
+
+/* Menu Section Enhancement */
+.menu-section-enhanced {
+  position: relative;
+}
+
+.menu-section-cart-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.menu-section-cart-indicator.has-items {
+  background: rgba(16, 185, 129, 0.95);
+  color: white;
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Responsive Cart Indicators */
+@media (max-width: 640px) {
+  .sticky-cart-enhanced {
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .sticky-cart-button {
+    padding: 12px;
+  }
+  
+  .cart-badge {
+    min-width: 20px;
+    height: 20px;
+    font-size: 10px;
+    top: -6px;
+    right: -6px;
+  }
+  
+  .menu-section-cart-indicator {
+    top: 15px;
+    right: 15px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .sticky-cart-enhanced {
+    bottom: 18px;
+    right: 18px;
+  }
+  
+  .sticky-cart-button {
+    padding: 14px;
+  }
+  
+  .cart-badge {
+    min-width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+}
+
+/* Card to Cart Connection Animation */
+@keyframes card-to-cart {
+  0% {
+    transform: scale(1) translateX(0) translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8) translateX(20px) translateY(-20px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.3) translateX(100px) translateY(-100px);
+    opacity: 0;
+  }
+}
+
+.animate-card-to-cart {
+  animation: card-to-cart 0.8s ease-in-out;
+}
+
+/* Menu Grid Container Enhancement */
+.menu-grid-container {
+  position: relative;
+}
+
+.menu-grid-cart-summary {
+  position: sticky;
+  top: 20px;
+  right: 0;
+  margin-left: auto;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+  z-index: 10;
+}
+
+.menu-grid-cart-summary .cart-summary {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  border-radius: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: all 0.3s ease;
+}
+
+.menu-grid-cart-summary .cart-summary.has-items {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  animation: glow 2s ease-in-out infinite;
+}
+
+.menu-grid-cart-summary .cart-summary .cart-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-grid-cart-summary .cart-summary .cart-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.menu-grid-cart-summary .cart-summary.has-items .cart-count {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+/* Enhanced Card Animations and Spacing */
+.menu-item-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  width: 100%;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 580px;
+}
+
+/* Clean Card Design Styles */
+.menu-item-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  height: auto;
+  min-height: auto;
+}
+
+.menu-item-card:hover {
+  transform: translateY(-4px);
+  z-index: 10;
+}
+
+/* Remove conflicting styles */
+.menu-card-enhanced {
+  /* Reset to default */
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.menu-item-card .image-gentle-float {
+  /* Reset to default */
+  margin-bottom: 0;
+  position: static;
+  z-index: auto;
+}
+
+/* Grid Container Reset */
+.menu-grid-container > div {
+  padding-top: 0;
+}
+
+/* Responsive Grid Spacing */
+@media (max-width: 640px) {
+  .menu-grid-container {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .menu-grid-container {
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .menu-grid-container {
+    gap: 2rem;
+  }
+}
+
+/* Circular Image Hover Effects */
+.menu-item-card img:hover {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+
+/* Enhanced Card Shadow for Floating Design */
+.menu-item-card {
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 4px 10px -2px rgba(0, 0, 0, 0.05);
+}
+
+.menu-item-card:hover {
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.2),
+    0 10px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Card Adjustments */
+@media (max-width: 640px) {
+  .menu-grid-container > div {
+    padding-top: 3rem;
+  }
+  
+  .menu-item-card {
+    margin-top: 3rem;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1280px) {
+  .menu-grid-container > div {
+    padding-top: 5rem;
+  }
+  
+  .menu-item-card {
+    margin-top: 5rem;
+    max-width: 260px;
+  }
+}
+
+/* Responsive adjustments for larger images */
+@media (max-width: 640px) {
+  .menu-grid-container > div {
+    padding-top: 5rem; /* Increased spacing for mobile */
+  }
+  
+  .menu-item-card {
+    margin-top: 5rem; /* More space for mobile to prevent overlap */
+    max-width: 100%;
+    min-height: 320px; /* Ensure enough height for content */
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .menu-grid-container > div {
+    padding-top: 4.5rem;
+  }
+  
+  .menu-item-card {
+    margin-top: 4.5rem;
+    min-height: 340px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .menu-grid-container > div {
+    padding-top: 5rem;
+  }
+  
+  .menu-item-card {
+    margin-top: 5rem;
+    max-width: 260px;
+  }
+}
+
+/* Video Background Styling */
+.video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(248,250,252,0.4) 50%, rgba(251,191,36,0.3) 100%);
+  backdrop-filter: blur(0.5px);
+  z-index: 0;
+}
+
+/* Enhanced Menu Cards for Video Background */
+.menu-card-enhanced {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-card-enhanced:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(148, 163, 184, 1);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+/* Text Contrast Enhancement */
+.text-enhanced-contrast {
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Card Content */
+.card-content-enhanced {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(8px);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.card-title-enhanced {
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+}
+
+/* Video Performance Optimization */
+@media (prefers-reduced-motion: reduce) {
+  .video-background {
+    display: none;
+  }
+}
+
+/* Mobile Video Optimization */
+@media (max-width: 768px) {
+  .video-background {
+    opacity: 0.45 !important;
+  }
+  
+  .video-overlay {
+    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,250,252,0.5) 50%, rgba(251,191,36,0.4) 100%);
+  }
+}
+
+/* Responsive Card Grid Optimization for 4-Column Layout */
+@media (max-width: 640px) {
+  .menu-item-card {
+    min-height: 460px;
+    max-height: 520px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .menu-item-card {
+    min-height: 470px;
+    max-height: 530px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .menu-item-card {
+    min-height: 480px;
+    max-height: 540px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .menu-item-card {
+    min-height: 480px;
+    max-height: 540px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1rem;
+  }
+}
+
+/* Floating Circular Image Cards - Large Images Version */
+.menu-grid-container > div {
+  padding-top: 4rem; /* Space for larger floating images */
+}
+
+.menu-item-card {
+  margin-top: 4rem; /* Space for larger floating images */
+}
+
+/* Ensure proper grid layout */
+.menu-grid-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Enhanced image visibility and quality */
+.menu-item-card img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: brightness(1.05) contrast(1.1) saturate(1.15);
+}
+
+.menu-item-card img:hover {
+  filter: brightness(1.1) contrast(1.15) saturate(1.2);
+  transform: scale(1.05);
+}
+
+/* Card width constraints for narrower design */
+.menu-item-card {
+  max-width: 280px;
+  margin: 4rem auto 0;
+}
+
+/* Mobile-specific fixes for image overlap */
+@media (max-width: 480px) {
+  .menu-grid-container > div {
+    padding-top: 6rem !important;
+  }
+  
+  .menu-item-card {
+    margin-top: 6rem !important;
+    min-height: 350px;
+    padding-bottom: 1rem;
+  }
+  
+  /* Smaller floating images on very small screens */
+  .menu-item-card div[class*="-mt-"] {
+    margin-top: -2.5rem !important;
+  }
+  
+  /* Mobile line positioning */
+  .card-line-separator {
+    opacity: 0.8;
+  }
+}
+
+/* Enhanced mobile responsiveness for animated line */
+@media (max-width: 640px) {
+  .card-line-separator {
+    padding: 0 0.5rem;
+  }
+  
+  .card-line-separator > div {
+    height: 2px !important;
+  }
+  
+  .animate-line-shimmer {
+    animation-duration: 2.5s;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .card-line-separator {
+    padding: 0 1rem;
+  }
+}
+
+/* Animated Line Separator for Cards */
+@keyframes line-shimmer {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(-100%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(0%);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateX(100%);
+  }
+}
+
+.animate-line-shimmer {
+  animation: line-shimmer 2s ease-in-out infinite;
+}
+
+/* Custom button styling - no border radius */
+.btn-no-radius {
+  border-radius: 0 !important;
+}
+
+/* Enhanced line separator styling */
+.card-line-separator {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-line-separator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.6), transparent);
+  animation: line-shimmer 3s ease-in-out infinite;
+}

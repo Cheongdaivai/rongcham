@@ -831,13 +831,18 @@ export default function AdminDashboard() {
                     <div className="flex flex-col lg:flex-row">
                       {/* Left: Image Section */}
                       <div className="relative lg:w-80 h-48 lg:h-auto flex-shrink-0">
-                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 transparency-checker">
                           {item.image_url ? (
-                            <img 
-                              src={item.image_url} 
-                              alt={item.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            />
+                            <div className="w-full h-full flex items-center justify-center p-4">
+                              <img 
+                                src={item.image_url} 
+                                alt={item.name}
+                                className="max-w-full max-h-full object-contain food-image transparent-optimized transparent-shadow group-hover:scale-110 transition-transform duration-700"
+                                style={{
+                                  imageRendering: 'crisp-edges'
+                                }}
+                              />
+                            </div>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <div className="text-center text-white/80">
