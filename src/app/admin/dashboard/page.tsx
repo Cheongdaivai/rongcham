@@ -29,7 +29,7 @@ export default function AdminDashboard() {
   const [, setUser] = useState<User | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'menu'>('orders')
   const [loading, setLoading] = useState(true)
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -364,6 +364,17 @@ export default function AdminDashboard() {
               <span className="hidden xs:inline">Orders</span>
             </button>
             <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
+                activeTab === 'history'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">History</span>
+            </button>
+            <button
               onClick={() => setActiveTab('menu')}
               className={`flex-1 py-2 sm:py-3 px-3 sm:px-6 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
                 activeTab === 'menu'
@@ -377,192 +388,413 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Orders Tab */}
+        {/* Orders Tab - Receive Orders (Pending Only) */}
         {activeTab === 'orders' && (
           <div className="space-y-4 sm:space-y-6">
-            {orders.length === 0 ? (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Receive Orders</h2>
+                <p className="text-sm sm:text-base text-slate-600">New incoming orders</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-amber-500 text-white border-0 px-3 py-1 rounded-full">
+                  {orders.filter(order => order.status === 'pending').length} pending orders
+                </Badge>
+              </div>
+            </div>
+
+            {orders.filter(order => order.status === 'pending').length === 0 ? (
               <Card className="p-8 sm:p-12 text-center bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm">
                 <Package className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No orders yet</h3>
-                <p className="text-sm sm:text-base text-slate-500">Orders will appear here when customers place them.</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No pending orders</h3>
+                <p className="text-sm sm:text-base text-slate-500">New orders will appear here when customers place them.</p>
               </Card>
             ) : (
               <div className="grid gap-4 sm:gap-6">
-                {orders.map((order) => {
-                  const statusConfig = getStatusConfig(order.status)
-                  const StatusIcon = statusConfig.icon
-                  
-                  return (
-                    <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
-                      {/* Simple status indicator */}
-                      <div className={`absolute top-0 left-0 w-full h-1 ${
-                        order.status === 'pending' ? 'bg-amber-400' :
-                        order.status === 'preparing' ? 'bg-blue-500' :
-                        order.status === 'done' ? 'bg-green-500' :
-                        'bg-red-500'
-                      }`}></div>
+                {orders
+                  .filter(order => order.status === 'pending')
+                  .map((order) => {
+                    const statusConfig = getStatusConfig(order.status)
+                    const StatusIcon = statusConfig.icon
+                    
+                    return (
+                      <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+                        {/* Status indicator */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-amber-400"></div>
 
-                      <div className="p-6">
-                        {/* Clean order header */}
-                        <div className="flex flex-col lg:flex-row justify-between items-start mb-6 gap-6">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className="p-3 bg-slate-100 rounded-lg flex-shrink-0">
-                              <Package className="h-6 w-6 text-slate-600" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-xl font-semibold text-slate-900">
-                                  Order #{order.order_number}
-                                </h3>
-                                <Badge className={`${statusConfig.color} px-3 py-1 rounded-md font-medium text-sm border flex items-center gap-2`}>
-                                  <StatusIcon className="h-4 w-4" />
-                                  {statusConfig.label}
-                                </Badge>
+                        <div className="p-6">
+                          {/* Order header */}
+                          <div className="flex flex-col lg:flex-row justify-between items-start mb-6 gap-6">
+                            <div className="flex items-start gap-4 flex-1">
+                              <div className="p-3 bg-slate-100 rounded-lg flex-shrink-0">
+                                <Package className="h-6 w-6 text-slate-600" />
                               </div>
-                              <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
-                                <Clock className="h-4 w-4" />
-                                {new Date(order.created_at).toLocaleString()}
-                              </div>
-                              {order.customer_note && (
-                                <div className="bg-slate-50 p-3 rounded-lg border-l-4 border-blue-400 mt-3">
-                                  <p className="text-slate-700 text-sm">
-                                    <span className="font-medium text-slate-800">Note:</span> {order.customer_note}
-                                  </p>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="text-xl font-semibold text-slate-900">
+                                    Order #{order.order_number}
+                                  </h3>
+                                  <Badge className={`${statusConfig.color} px-3 py-1 rounded-md font-medium text-sm border flex items-center gap-2`}>
+                                    <StatusIcon className="h-4 w-4" />
+                                    {statusConfig.label}
+                                  </Badge>
                                 </div>
-                              )}
+                                <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
+                                  <Clock className="h-4 w-4" />
+                                  {new Date(order.created_at).toLocaleString()}
+                                </div>
+                                {order.customer_note && (
+                                  <div className="bg-slate-50 p-3 rounded-lg border-l-4 border-blue-400 mt-3">
+                                    <p className="text-slate-700 text-sm">
+                                      <span className="font-medium text-slate-800">Note:</span> {order.customer_note}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <div className="bg-slate-900 text-white px-4 py-2 rounded-lg">
-                              <div className="text-right">
-                                <div className="text-xl font-bold">${order.total_amount.toFixed(2)}</div>
-                                <div className="text-slate-300 text-xs">Total</div>
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="bg-slate-900 text-white px-4 py-2 rounded-lg">
+                                <div className="text-right">
+                                  <div className="text-xl font-bold">${order.total_amount.toFixed(2)}</div>
+                                  <div className="text-slate-300 text-xs">Total</div>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Simple Order Items */}
-                        {order.order_items && (
-                          <div className="mb-6">
-                            {/* Clean items header */}
-                            <div className="bg-slate-50 p-4 rounded-lg mb-4 border border-slate-200">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <Package className="h-5 w-5 text-slate-600" />
-                                  <div>
-                                    <h4 className="font-semibold text-slate-800">Order Items</h4>
-                                    <p className="text-slate-600 text-sm">Items in this order</p>
+                          {/* Order Items */}
+                          {order.order_items && (
+                            <div className="mb-6">
+                              {/* Items header */}
+                              <div className="bg-slate-50 p-4 rounded-lg mb-4 border border-slate-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <Package className="h-5 w-5 text-slate-600" />
+                                    <div>
+                                      <h4 className="font-semibold text-slate-800">Order Items</h4>
+                                      <p className="text-slate-600 text-sm">Items in this order</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-sm font-medium">
+                                      {order.order_items.length} {order.order_items.length === 1 ? 'Type' : 'Types'}
+                                    </span>
+                                    <span className="px-3 py-1 bg-slate-800 text-white rounded-md text-sm font-medium">
+                                      {getTotalItemsInOrder(order.order_items)} {getTotalItemsInOrder(order.order_items) === 1 ? 'Item' : 'Items'}
+                                    </span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-sm font-medium">
-                                    {order.order_items.length} {order.order_items.length === 1 ? 'Type' : 'Types'}
-                                  </span>
-                                  <span className="px-3 py-1 bg-slate-800 text-white rounded-md text-sm font-medium">
-                                    {getTotalItemsInOrder(order.order_items)} {getTotalItemsInOrder(order.order_items) === 1 ? 'Item' : 'Items'}
-                                  </span>
-                                </div>
                               </div>
-                            </div>
 
-                            {/* Clean items list */}
-                            <div className="space-y-3">
-                              {order.order_items.map((item, index) => (
-                                <div key={item.id} className="bg-white p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4 flex-1">
-                                      {/* Simple quantity */}
-                                      <div className="w-10 h-10 bg-slate-100 border border-slate-300 rounded-lg flex items-center justify-center">
-                                        <span className="text-slate-700 font-semibold">{item.quantity}</span>
+                              {/* Items list */}
+                              <div className="space-y-3">
+                                {order.order_items.map((item, index) => (
+                                  <div key={item.id} className="bg-white p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-4 flex-1">
+                                        {/* Quantity */}
+                                        <div className="w-10 h-10 bg-slate-100 border border-slate-300 rounded-lg flex items-center justify-center">
+                                          <span className="text-slate-700 font-semibold">{item.quantity}</span>
+                                        </div>
+                                        
+                                        {/* Item details */}
+                                        <div className="flex-1">
+                                          <h5 className="font-medium text-slate-900 mb-1">
+                                            {item.menu_item?.name || 'Unknown Item'}
+                                          </h5>
+                                          {item.menu_item?.price && (
+                                            <p className="text-slate-500 text-sm">
+                                              ${item.menu_item.price.toFixed(2)} each
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
                                       
-                                      {/* Item details */}
-                                      <div className="flex-1">
-                                        <h5 className="font-medium text-slate-900 mb-1">
-                                          {item.menu_item?.name || 'Unknown Item'}
-                                        </h5>
-                                        {item.menu_item?.price && (
-                                          <p className="text-slate-500 text-sm">
-                                            ${item.menu_item.price.toFixed(2)} each
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Simple price */}
-                                    <div className="text-right">
-                                      <div className="bg-slate-800 text-white px-3 py-2 rounded-lg">
-                                        <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
+                                      {/* Price */}
+                                      <div className="text-right">
+                                        <div className="bg-slate-800 text-white px-3 py-2 rounded-lg">
+                                          <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
+                                ))}
+                              </div>
+                              
+                              {/* Total summary */}
+                              <div className="mt-4 p-4 bg-slate-800 text-white rounded-lg">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium">Order Total</span>
+                                  <span className="text-xl font-bold">${order.total_amount.toFixed(2)}</span>
                                 </div>
-                              ))}
-                            </div>
-                            
-                            {/* Simple total summary */}
-                            <div className="mt-4 p-4 bg-slate-800 text-white rounded-lg">
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium">Order Total</span>
-                                <span className="text-xl font-bold">${order.total_amount.toFixed(2)}</span>
                               </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        {/* Simple Status Controls */}
-                        <div className="border-t border-slate-200 pt-4 mt-6">
-                          <div className="flex flex-col sm:flex-row gap-3">
-                            {order.status === 'pending' && (
-                              <>
-                                <Button
-                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-medium transition-colors"
-                                  onClick={() => handleOrderStatusUpdate(order.order_id, 'preparing')}
-                                >
-                                  <ChefHat className="w-4 h-4 mr-2" />
-                                  Start Preparing
-                                </Button>
-                                <Button
-                                  className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg py-3 font-medium transition-colors"
-                                  onClick={() => handleOrderStatusUpdate(order.order_id, 'cancelled')}
-                                >
-                                  <XCircle className="w-4 h-4 mr-2" />
-                                  Cancel Order
-                                </Button>
-                              </>
-                            )}
-                            {order.status === 'preparing' && (
+                          {/* Action buttons */}
+                          <div className="border-t border-slate-200 pt-4 mt-6">
+                            <div className="flex flex-col sm:flex-row gap-3">
                               <Button
-                                className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-medium transition-colors"
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-medium transition-colors"
                                 onClick={() => handleOrderStatusUpdate(order.order_id, 'done')}
                               >
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Mark as Complete
                               </Button>
-                            )}
-                            {order.status === 'done' && (
-                              <div className="w-full bg-green-50 border border-green-200 rounded-lg py-3 px-4">
-                                <div className="flex items-center justify-center gap-2 text-green-700">
-                                  <CheckCircle className="w-5 h-5" />
-                                  <span className="font-medium">Order Completed</span>
-                                </div>
-                              </div>
-                            )}
-                            {order.status === 'cancelled' && (
-                              <div className="w-full bg-red-50 border border-red-200 rounded-lg py-3 px-4">
-                                <div className="flex items-center justify-center gap-2 text-red-700">
-                                  <XCircle className="w-5 h-5" />
-                                  <span className="font-medium">Order Cancelled</span>
-                                </div>
-                              </div>
-                            )}
+                              <Button
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg py-3 font-medium transition-colors"
+                                onClick={() => handleOrderStatusUpdate(order.order_id, 'cancelled')}
+                              >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Cancel Order
+                              </Button>
+                            </div>
                           </div>
                         </div>
+                      </Card>
+                    )
+                  })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* History Tab - Kanban View for Done & Cancelled Orders */}
+        {activeTab === 'history' && (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Order History</h2>
+                <p className="text-sm sm:text-base text-slate-600">Completed and cancelled orders</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-green-500 text-white border-0 px-3 py-1 rounded-full">
+                  {orders.filter(order => order.status === 'done').length} completed
+                </Badge>
+                <Badge className="bg-red-500 text-white border-0 px-3 py-1 rounded-full">
+                  {orders.filter(order => order.status === 'cancelled').length} cancelled
+                </Badge>
+              </div>
+            </div>
+
+            {orders.filter(order => order.status === 'done' || order.status === 'cancelled').length === 0 ? (
+              <Card className="p-8 sm:p-12 text-center bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm">
+                <Clock className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No order history</h3>
+                <p className="text-sm sm:text-base text-slate-500">Completed and cancelled orders will appear here.</p>
+              </Card>
+            ) : (
+              /* Kanban Board Layout for History */
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Completed Orders Column */}
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-green-500 rounded-lg">
+                        <CheckCircle className="h-5 w-5 text-white" />
                       </div>
-                    </Card>
-                  )
-                })}
+                      <div>
+                        <h3 className="font-bold text-green-800">Completed Orders</h3>
+                        <p className="text-sm text-green-600">Successfully completed</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-500 text-white border-0 px-3 py-1 rounded-full">
+                        {orders.filter(order => order.status === 'done').length} orders
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto">
+                    {orders
+                      .filter(order => order.status === 'done')
+                      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+                      .map((order) => (
+                        <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-green-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+
+                          <div className="p-4">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-green-100 rounded-lg">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-slate-900">#{order.order_number}</h4>
+                                  <p className="text-xs text-slate-500">
+                                    {new Date(order.created_at).toLocaleDateString()} {new Date(order.created_at).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="bg-green-600 text-white px-3 py-1 rounded-lg">
+                                  <span className="text-lg font-bold">${order.total_amount.toFixed(2)}</span>
+                                </div>
+                                <Badge className="mt-2 bg-green-100 text-green-800 border-green-200 px-2 py-1 rounded-md text-xs">
+                                  Completed
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {order.order_items && (
+                              <div className="mb-4">
+                                <div className="bg-slate-50 p-3 rounded-lg">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-slate-700">Items</span>
+                                    <span className="text-xs text-slate-500">
+                                      {getTotalItemsInOrder(order.order_items)} total
+                                    </span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {order.order_items.slice(0, 3).map((item) => (
+                                      <div key={item.id} className="flex justify-between text-sm">
+                                        <span className="text-slate-700">
+                                          {item.quantity}x {item.menu_item?.name || 'Unknown'}
+                                        </span>
+                                        <span className="font-medium">${item.subtotal.toFixed(2)}</span>
+                                      </div>
+                                    ))}
+                                    {order.order_items.length > 3 && (
+                                      <p className="text-xs text-slate-500">
+                                        +{order.order_items.length - 3} more items
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {order.customer_note && (
+                              <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                                <p className="text-sm text-blue-800">
+                                  <span className="font-medium">Note:</span> {order.customer_note}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="bg-green-50 border border-green-200 rounded-lg py-3 px-4">
+                              <div className="flex items-center justify-center gap-2 text-green-700">
+                                <CheckCircle className="w-4 h-4" />
+                                <span className="text-sm font-medium">Order Completed</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                      
+                    {orders.filter(order => order.status === 'done').length === 0 && (
+                      <div className="text-center py-8">
+                        <CheckCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No completed orders</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cancelled Orders Column */}
+                <div className="space-y-4">
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-red-500 rounded-lg">
+                        <XCircle className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-red-800">Cancelled Orders</h3>
+                        <p className="text-sm text-red-600">Orders that were cancelled</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-red-500 text-white border-0 px-3 py-1 rounded-full">
+                        {orders.filter(order => order.status === 'cancelled').length} orders
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto">
+                    {orders
+                      .filter(order => order.status === 'cancelled')
+                      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+                      .map((order) => (
+                        <Card key={order.order_id} className="group relative overflow-hidden bg-white border border-red-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+
+                          <div className="p-4">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-red-100 rounded-lg">
+                                  <XCircle className="h-4 w-4 text-red-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-slate-900">#{order.order_number}</h4>
+                                  <p className="text-xs text-slate-500">
+                                    {new Date(order.created_at).toLocaleDateString()} {new Date(order.created_at).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="bg-red-600 text-white px-3 py-1 rounded-lg">
+                                  <span className="text-lg font-bold">${order.total_amount.toFixed(2)}</span>
+                                </div>
+                                <Badge className="mt-2 bg-red-100 text-red-800 border-red-200 px-2 py-1 rounded-md text-xs">
+                                  Cancelled
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {order.order_items && (
+                              <div className="mb-4">
+                                <div className="bg-slate-50 p-3 rounded-lg">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-slate-700">Items</span>
+                                    <span className="text-xs text-slate-500">
+                                      {getTotalItemsInOrder(order.order_items)} total
+                                    </span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {order.order_items.slice(0, 3).map((item) => (
+                                      <div key={item.id} className="flex justify-between text-sm">
+                                        <span className="text-slate-700">
+                                          {item.quantity}x {item.menu_item?.name || 'Unknown'}
+                                        </span>
+                                        <span className="font-medium">${item.subtotal.toFixed(2)}</span>
+                                      </div>
+                                    ))}
+                                    {order.order_items.length > 3 && (
+                                      <p className="text-xs text-slate-500">
+                                        +{order.order_items.length - 3} more items
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {order.customer_note && (
+                              <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                                <p className="text-sm text-blue-800">
+                                  <span className="font-medium">Note:</span> {order.customer_note}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="bg-red-50 border border-red-200 rounded-lg py-3 px-4">
+                              <div className="flex items-center justify-center gap-2 text-red-700">
+                                <XCircle className="w-4 h-4" />
+                                <span className="text-sm font-medium">Order Cancelled</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                      
+                    {orders.filter(order => order.status === 'cancelled').length === 0 && (
+                      <div className="text-center py-8">
+                        <XCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No cancelled orders</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -714,4 +946,3 @@ export default function AdminDashboard() {
     </div>
   )
 }
-  
