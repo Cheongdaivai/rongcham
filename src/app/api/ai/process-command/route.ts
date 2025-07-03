@@ -96,6 +96,12 @@ COMMAND TYPES:
 3. MENU_QUERY: Query menu information (e.g., "show popular items", "what's available", "best selling dishes")
 4. HELP: Request help or list commands
 
+COMMON MISPRONOUNCIATIONS TO WATCH FOR:
+- "to" → "two" (number context)
+- "depending" → "pending" (order status context)
+- "all the" → "order" (already handled)
+- "other" → "order" (already handled)
+
 IMPORTANT: For commands like "mark as complete the order" or "complete order", set status to "done".
 
 RESPONSE FORMAT (JSON only, no extra text):
@@ -120,7 +126,7 @@ Now analyze this command: "${command}"
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -141,6 +147,13 @@ Now analyze this command: "${command}"
     )
 
     if (!response.ok) {
+      const errorText = await response.text()
+      console.log(`Gemini API error ${response.status}: ${errorText}`)
+      // For quota errors (429) or unavailable models, immediately use fallback
+      if (response.status === 429 || response.status === 503 || errorText.includes('quota')) {
+        console.log('Gemini API unavailable, using fallback analysis')
+        return fallbackAnalysis(command)
+      }
       throw new Error(`Gemini API error: ${response.status}`)
     }
 
@@ -171,7 +184,12 @@ Now analyze this command: "${command}"
 }
 
 function fallbackAnalysis(command: string): AICommandAnalysis {
-  const lowerCommand = command.toLowerCase()
+  let lowerCommand = command.toLowerCase()
+  
+  // Handle common mispronounciations before analysis
+  lowerCommand = lowerCommand.replace(/\b(to)\b/gi, 'two')
+  lowerCommand = lowerCommand.replace(/\b(depending)\b/gi, 'pending')
+  lowerCommand = lowerCommand.replace(/\b(all the|other|item|request|job|audio|older)\b/gi, 'order')
   
   // Enhanced keyword-based fallback for order status updates
   if (lowerCommand.includes('mark') || lowerCommand.includes('set') || lowerCommand.includes('update') || 
@@ -242,14 +260,27 @@ async function executeCommand(analysis: AICommandAnalysis): Promise<any> {
     switch (analysis.intent) {
       case 'order_status':
         if (analysis.entities.orderNumber && analysis.entities.status) {
+          // Find the order by order_number to get the order_id
+          const orders = await getAllOrdersServer()
+          const targetOrder = orders.find(o => o.order_number === analysis.entities.orderNumber)
+          
+          if (!targetOrder) {
+            return { 
+              success: false, 
+              error: `Order number ${analysis.entities.orderNumber} not found`,
+              orderNumber: analysis.entities.orderNumber
+            }
+          }
+          
           const result = await updateOrderStatusServer(
-            analysis.entities.orderNumber,
+            targetOrder.order_id,  // Use order_id, not order_number
             analysis.entities.status
           )
           return {
             success: !!result,
             action: 'order_status_update',
             orderNumber: analysis.entities.orderNumber,
+            orderId: targetOrder.order_id,
             newStatus: analysis.entities.status,
             result
           }
@@ -350,7 +381,7 @@ Generate a response:
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -371,6 +402,13 @@ Generate a response:
     )
 
     if (!response.ok) {
+      const errorText = await response.text()
+      console.log(`Gemini API error ${response.status}: ${errorText}`)
+      // For quota errors (429) or unavailable models, immediately use fallback
+      if (response.status === 429 || response.status === 503 || errorText.includes('quota')) {
+        console.log('Gemini API unavailable, using fallback response')
+        return generateFallbackResponse(analysis, executionResult)
+      }
       throw new Error(`Gemini API error: ${response.status}`)
     }
 
@@ -386,6 +424,8 @@ Generate a response:
 function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: any): string {
   if (analysis.intent === 'order_status' && executionResult.success) {
     return `Order ${analysis.entities.orderNumber} has been updated to ${analysis.entities.status}.`
+  } else if (analysis.intent === 'order_status' && !executionResult.success) {
+    return executionResult.error || `I'm sorry, I couldn't update order ${analysis.entities.orderNumber}. Please try again.`
   } else if (analysis.intent === 'order_query' && executionResult.success) {
     const data = executionResult.data
     return `You have ${data.pending} pending orders, ${data.done} completed orders, and ${data.cancelled} cancelled orders.`

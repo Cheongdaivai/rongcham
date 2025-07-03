@@ -41,6 +41,10 @@ export class AIVoiceCommandProcessor {
       let normalized = command.toLowerCase()
       normalized = normalized.replace(/\b(all the|other|item|request|job|audio|older|order)\b/gi, 'order')
       
+      // Handle common mispronounciations
+      normalized = normalized.replace(/\b(to)\b/gi, 'two')
+      normalized = normalized.replace(/\b(depending)\b/gi, 'pending')
+      
       // Also normalize status words to avoid misheard words
       normalized = normalized.replace(/\b(finish|complete|ready|finished|over|cooking|making|working|active|begin|preparing)\b/gi, 'done')
       normalized = normalized.replace(/\b(stop|remove|delete|void)\b/gi, 'cancelled')

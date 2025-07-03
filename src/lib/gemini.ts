@@ -31,7 +31,7 @@ export class GeminiAIService {
 
   constructor() {
     this.genAI = getGeminiClient()
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
   }
 
   async analyzeVoiceCommand(
@@ -41,6 +41,13 @@ export class GeminiAIService {
       availableMenuItems: Array<{name: string, menu_id: string, availability: boolean, total_ordered: number}>
     }
   ): Promise<AICommandAnalysis> {
+    
+    // Check if API key is available
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+    if (!apiKey) {
+      console.log('Gemini API key not found, using fallback analysis')
+      return this.fallbackAnalysis(command)
+    }
     
     const systemPrompt = `
 You are an AI assistant for a Thai restaurant ordering system. Analyze voice commands and extract intent and entities.
@@ -56,6 +63,12 @@ COMMAND TYPES:
 2. ORDER_QUERY: Query order information (e.g., "how many pending orders", "show preparing orders", "list recent orders")
 3. MENU_QUERY: Query menu information (e.g., "show popular items", "what's available", "best selling dishes")
 4. HELP: Request help or list commands
+
+COMMON MISPRONOUNCIATIONS TO WATCH FOR:
+- "to" → "two" (number context)
+- "depending" → "pending" (order status context)
+- "all the" → "order" (already handled)
+- "other" → "order" (already handled)
 
 RESPONSE FORMAT (JSON only):
 {
@@ -90,6 +103,13 @@ Now analyze this command: "${command}"
     try {
       const result = await this.model.generateContent(systemPrompt)
       const response = await result.response
+      
+      // Check if response indicates unavailable model
+      if (response.candidates.length === 0) {
+        console.log('Gemini model returned no candidates, using fallback analysis')
+        return this.fallbackAnalysis(command)
+      }
+      
       const text = response.text()
       
       // Extract JSON from response
@@ -127,13 +147,25 @@ Now analyze this command: "${command}"
     } catch (error) {
       console.error('Error analyzing command with Gemini:', error)
       
+      // Check if it's a quota/availability error and log it
+      if (error instanceof Error && error.message.includes('quota')) {
+        console.log('Gemini API quota exceeded, using fallback analysis')
+      } else if (error instanceof Error && error.message.includes('unavailable')) {
+        console.log('Gemini model unavailable, using fallback analysis')
+      }
+      
       // Fallback analysis using simple keyword matching
       return this.fallbackAnalysis(command)
     }
   }
 
   private fallbackAnalysis(command: string): AICommandAnalysis {
-    const lowerCommand = command.toLowerCase()
+    let lowerCommand = command.toLowerCase()
+    
+    // Handle common mispronounciations before analysis
+    lowerCommand = lowerCommand.replace(/\b(to)\b/gi, 'two')
+    lowerCommand = lowerCommand.replace(/\b(depending)\b/gi, 'pending')
+    lowerCommand = lowerCommand.replace(/\b(all the|other|item|request|job|audio|older)\b/gi, 'order')
     
     // Simple keyword-based fallback
     if (lowerCommand.includes('mark') || lowerCommand.includes('set') || lowerCommand.includes('update')) {

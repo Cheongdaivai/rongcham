@@ -9,7 +9,7 @@ export async function GET() {
       try {
         // Test the API with a simple request
         const testResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: {
@@ -40,7 +40,7 @@ export async function GET() {
     return NextResponse.json({
       available: isGeminiWorking,
       geminiConfigured: !!apiKey,
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       features: {
         voiceControl: true,
         aiProcessing: isGeminiWorking,
