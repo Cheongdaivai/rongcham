@@ -157,35 +157,24 @@ export async function deleteMenuItemServer(menu_id: string): Promise<boolean> {
   }
 }
 
-// Order Operations (Server-side)
+
+
 export async function createOrderServer(orderItems: { menu_id: string; quantity: number }[], customerNote?: string, businessEmail?: string): Promise<Order | null> {
   try {
     // Ensure user is authenticated
-    await getCurrentUser()
+    const user = await getCurrentUser()
     
     console.log('Creating order with items:', orderItems, 'customerNote:', customerNote)
+    console.log('Business email parameter:', businessEmail)
+    console.log('Current user email:', user.email)
+    
     const supabase = await getServerSupabaseClient()
     
-    // Start a transaction by creating the order first
-    // The trigger will automatically set customer_email
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_note: customerNote,
-        customer_email: businessEmail,
-        status: 'pending'
-      })
-      .select()
-      .single()
-
-    if (orderError) {
-      console.error('Error creating order:', orderError)
-      throw new Error(` error creating order: ${orderError.message}`)
-    }
-
-    console.log('Order created successfully:', orderData)
-
-    // Get menu items to calculate prices
+    // Use the authenticated user's email, not hardcoded
+    const customerEmail = businessEmail || user.email
+    console.log('Using customer email:', customerEmail)
+    
+    // Get menu items to calculate prices FIRST
     const menuIds = orderItems.map(item => item.menu_id)
     console.log('Fetching menu items for IDs:', menuIds)
     
@@ -196,7 +185,7 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
 
     if (menuError) {
       console.error('Error fetching menu items for order:', menuError)
-      throw new Error(` error fetching menu items: ${menuError.message}`)
+      throw new Error(`Error fetching menu items: ${menuError.message}`)
     }
 
     console.log('Fetched menu items:', menuItems)
@@ -204,6 +193,40 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
     if (!menuItems || menuItems.length === 0) {
       throw new Error('No menu items found for the provided IDs')
     }
+
+    // Calculate total amount
+    const totalAmount = orderItems.reduce((total, item) => {
+      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
+      if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
+      return total + (menuItem.price * item.quantity)
+    }, 0)
+
+    console.log('Calculated total amount:', totalAmount)
+
+    // Create the order - the trigger will automatically set order_number
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        customer_note: customerNote,
+        customer_email: customerEmail,
+        status: 'pending',
+        total_amount: totalAmount
+      })
+      .select()
+      .single()
+
+    if (orderError) {
+      console.error('Error creating order:', orderError)
+      console.error('Order error details:', {
+        message: orderError.message,
+        details: orderError.details,
+        hint: orderError.hint,
+        code: orderError.code
+      })
+      throw new Error(`Error creating order: ${orderError.message}`)
+    }
+
+    console.log('Order created successfully:', orderData)
 
     // Create order items
     const orderItemsToInsert = orderItems.map(item => {
@@ -228,7 +251,7 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
       console.error('Error creating order items:', orderItemsError)
       // Clean up the order if order items creation failed
       await supabase.from('orders').delete().eq('order_id', orderData.order_id)
-      throw new Error(` error creating order items: ${orderItemsError.message}`)
+      throw new Error(`Error creating order items: ${orderItemsError.message}`)
     }
 
     console.log('Order items created successfully')
@@ -286,7 +309,7 @@ export async function getAllOrdersServer(): Promise<Order[]> {
           menu_item(*)
         )
       `)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) {
       console.error('Error fetching orders:', error)

@@ -141,27 +141,11 @@ export async function deleteMenuItem(menu_id: string): Promise<boolean> {
 export async function createOrder(orderItems: { menu_id: string; quantity: number }[], customerNote?: string, businessEmail?: string): Promise<Order | null> {
   try {
     // Ensure user is authenticated
-    await getCurrentUser()
+    const user = await getCurrentUser()
     
     const supabase = getSupabaseClient()
     
-    // Start a transaction by creating the order first
-    // The trigger will automatically set customer_email
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_note: customerNote,
-        status: 'pending'
-      })
-      .select()
-      .single()
-
-    if (orderError) {
-      console.error('Error creating order:', orderError)
-      return null
-    }
-
-    // Get menu items to calculate prices
+    // Get menu items to calculate prices FIRST
     const menuIds = orderItems.map(item => item.menu_id)
     const { data: menuItems, error: menuError } = await supabase
       .from('menu_item')
@@ -172,6 +156,51 @@ export async function createOrder(orderItems: { menu_id: string; quantity: numbe
       console.error('Error fetching menu items for order:', menuError)
       return null
     }
+
+    if (!menuItems || menuItems.length === 0) {
+      console.error('No menu items found for the provided IDs')
+      return null
+    }
+
+    // Calculate total amount
+    const totalAmount = orderItems.reduce((total, item) => {
+      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
+      if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
+      return total + (menuItem.price * item.quantity)
+    }, 0)
+
+   console.log('Creating order with total amount:', totalAmount)
+
+// Get the next order number manually
+const { data: nextOrderNumber } = await supabase
+  .rpc('get_next_order_number', {
+    customer_email_param: businessEmail || user.email,
+    order_date_param: new Date().toISOString().split('T')[0]
+  })
+
+console.log('Next order number:', nextOrderNumber)
+
+const { data: orderData, error: orderError } = await supabase
+  .from('orders')
+  .insert({
+    customer_note: customerNote,
+    customer_email: businessEmail || user.email,
+    status: 'pending',
+    total_amount: totalAmount,
+    order_number: nextOrderNumber // Manually set the order number
+  })
+  .select()
+  .single()
+
+if (orderError) {
+  console.error('Error creating order:', orderError)
+  console.error('Full error details:', JSON.stringify(orderError, null, 2))
+  return null
+}
+
+console.log('Order created successfully:', orderData)
+console.log('Order number assigned:', orderData.order_number)
+
 
     // Create order items
     const orderItemsToInsert = orderItems.map(item => {
@@ -221,6 +250,7 @@ export async function getOrderById(order_id: number): Promise<Order | null> {
       `)
       .eq('order_id', order_id)
       .single()
+      
 
     if (error) {
       console.error('Error fetching order:', error)
@@ -247,7 +277,7 @@ export async function getAllOrders(includeMenuDetails = true): Promise<Order[]> 
           *${includeMenuDetails ? ',\n          menu_item(*)' : ''}
         )
       `)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) {
       console.error('Error fetching orders:', error)
