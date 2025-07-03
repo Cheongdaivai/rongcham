@@ -227,9 +227,17 @@ export class AIVoiceCommandProcessor {
       cancelled: this.orders.filter(o => o.status === 'cancelled').length
     }
 
+    // Generate varied response messages
+    const summaryResponses = [
+      `Right now there are ${orderStats.pending} orders waiting, ${orderStats.done} completed, and ${orderStats.cancelled} cancelled.`,
+      `Current orders: ${orderStats.pending} in progress, ${orderStats.done} finished, ${orderStats.cancelled} cancelled.`,
+      `I count ${orderStats.pending} pending orders, ${orderStats.done} done orders, and ${orderStats.cancelled} cancelled.`,
+      `Order status: ${orderStats.pending} waiting, ${orderStats.done} completed, ${orderStats.cancelled} cancelled.`
+    ]
+    
     return {
       success: true,
-      message: `Order summary: ${orderStats.total} total, ${orderStats.pending} pending, ${orderStats.done} done, ${orderStats.cancelled} cancelled`,
+      message: summaryResponses[Math.floor(Math.random() * summaryResponses.length)],
       data: orderStats
     }
   }

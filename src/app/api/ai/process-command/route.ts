@@ -92,15 +92,47 @@ ${context.menuItems.slice(0, 20).map(m => `${m.name} (${m.availability ? 'availa
 
 COMMAND TYPES:
 1. ORDER_STATUS: Update order status (e.g., "mark order 123 as done", "cancel order 456", "complete order 789", "finish order 123", "mark as complete the order")
-2. ORDER_QUERY: Query order information (e.g., "how many pending orders", "show done orders", "list recent orders")
+2. ORDER_QUERY: Query order information - RECOGNIZE these question patterns:
+   - Information seeking: "list out", "what are", "show me", "tell me", "when did", "how many"
+   - Examples: "list out pending orders", "what are the recent orders", "show me done orders", "tell me about order 123", "when did order 5 complete", "how many cancelled orders"
 3. MENU_QUERY: Query menu information (e.g., "show popular items", "what's available", "best selling dishes")
 4. HELP: Request help or list commands
 
+CRITICAL: ANY question or information-seeking phrase should be classified as ORDER_QUERY, not unknown.
+
+QUERY RESPONSE GUIDELINES:
+- FLEXIBLE RESPONSES: Don't always use the standard format "You have X pending orders, Y completed orders, and Z cancelled orders."
+- For "latest pending order": Find the most recent pending order by created_at timestamp and provide details
+- For "list all pending orders": If too many orders, say "There are X pending orders. Would you like me to show the most recent ones?"
+- For "what are the pending orders": Provide helpful information about pending orders, their count, or recent ones
+- For "when did order X complete": Check the order's updated_at timestamp and provide the time
+- For "tell me about order X": Provide order details like status, total amount, items if available
+- Be flexible with natural language variations and provide conversational, helpful responses
+- VARY your response style - be conversational, not robotic
+
 COMMON MISPRONOUNCIATIONS TO WATCH FOR:
-- "to" → "two" (number context)
+- "to" → "two" → "2" (number context)
 - "depending" → "pending" (order status context)
 - "all the" → "order" (already handled)
 - "other" → "order" (already handled)
+
+SPECIAL HANDLING FOR "depending":
+If you hear "depending" and the intent is unclear/unknown, assume it's likely:
+- "to pending" (status change command)
+- "the pending" (query about pending orders)
+Context clues: If there's an order number mentioned, treat as status change to "pending"
+
+NUMBER WORD CONVERSION:
+CRITICAL: When extracting orderNumber, ALWAYS convert spoken numbers to digits:
+- "one" → 1, "two" → 2, "three" → 3, "four" → 4, "five" → 5
+- "six" → 6, "seven" → 7, "eight" → 8, "nine" → 9, "ten" → 10
+- "eleven" → 11, "twelve" → 12, "thirteen" → 13, "fourteen" → 14, "fifteen" → 15
+- "sixteen" → 16, "seventeen" → 17, "eighteen" → 18, "nineteen" → 19, "twenty" → 20
+
+EXAMPLES:
+- "set order number one to pending" → orderNumber: 1, status: "pending"
+- "mark order two as done" → orderNumber: 2, status: "done"
+- "cancel order three" → orderNumber: 3, status: "cancelled"
 
 IMPORTANT: For commands like "mark as complete the order" or "complete order", set status to "done".
 
@@ -125,6 +157,10 @@ Now analyze this command: "${command}"
 `
 
   try {
+    // Add timeout to prevent hanging when API is slow/unavailable
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
@@ -142,16 +178,21 @@ Now analyze this command: "${command}"
               ]
             }
           ]
-        })
+        }),
+        signal: controller.signal
       }
     )
+    
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const errorText = await response.text()
       console.log(`Gemini API error ${response.status}: ${errorText}`)
-      // For quota errors (429) or unavailable models, immediately use fallback
-      if (response.status === 429 || response.status === 503 || errorText.includes('quota')) {
-        console.log('Gemini API unavailable, using fallback analysis')
+      // For quota errors (429), unavailable models (503), or any rate limit related errors, use fallback
+      if (response.status === 429 || response.status === 503 || response.status === 400 || 
+          errorText.includes('quota') || errorText.includes('unavailable') || 
+          errorText.includes('rate limit') || errorText.includes('limit exceeded')) {
+        console.log('Gemini API unavailable/rate limited, using fallback analysis')
         return fallbackAnalysis(command)
       }
       throw new Error(`Gemini API error: ${response.status}`)
@@ -191,6 +232,18 @@ function fallbackAnalysis(command: string): AICommandAnalysis {
   lowerCommand = lowerCommand.replace(/\b(depending)\b/gi, 'pending')
   lowerCommand = lowerCommand.replace(/\b(all the|other|item|request|job|audio|older)\b/gi, 'order')
   
+  // Convert number words to digits for fallback processing
+  const numberWords = {
+    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
+    'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14', 'fifteen': '15',
+    'sixteen': '16', 'seventeen': '17', 'eighteen': '18', 'nineteen': '19', 'twenty': '20'
+  }
+  
+  Object.entries(numberWords).forEach(([word, digit]) => {
+    lowerCommand = lowerCommand.replace(new RegExp(`\\b${word}\\b`, 'gi'), digit)
+  })
+  
   // Enhanced keyword-based fallback for order status updates
   if (lowerCommand.includes('mark') || lowerCommand.includes('set') || lowerCommand.includes('update') || 
       lowerCommand.includes('complete') || lowerCommand.includes('finish')) {
@@ -226,11 +279,16 @@ function fallbackAnalysis(command: string): AICommandAnalysis {
     }
   }
   
-  if (lowerCommand.includes('how many') || lowerCommand.includes('pending') || lowerCommand.includes('preparing')) {
+  // Enhanced fallback for information-seeking queries
+  if (lowerCommand.includes('how many') || lowerCommand.includes('pending') || lowerCommand.includes('preparing') ||
+      lowerCommand.includes('list out') || lowerCommand.includes('what are') || lowerCommand.includes('show me') ||
+      lowerCommand.includes('tell me') || lowerCommand.includes('when did') || lowerCommand.includes('which') ||
+      lowerCommand.includes('orders') || lowerCommand.includes('done') || lowerCommand.includes('cancelled') ||
+      lowerCommand.includes('recent') || lowerCommand.includes('latest') || lowerCommand.includes('total')) {
     return {
       intent: 'order_query',
       entities: {},
-      confidence: 0.6,
+      confidence: 0.7,
       suggestedAction: 'Query order information',
       parameters: {}
     }
@@ -371,12 +429,18 @@ You are a helpful AI assistant for a Thai restaurant. Generate a natural, conver
 2. Provides relevant information from the result
 3. Uses a friendly, professional tone
 4. Is suitable for voice synthesis
+5. AVOID these robotic formats: "You have X pending orders, Y completed orders, and Z cancelled orders" or "Order summary: X waiting, Y finished, Z cancelled"
+
+EXAMPLES OF GOOD RESPONSES:
+- "I can see 5 orders are still pending, 12 have been completed, and 2 were cancelled."
+- "Right now there are 8 orders waiting to be processed, 15 orders are done, and 1 cancelled order."
+- "Looking at your orders, I count 3 pending ones, 20 completed orders, and 4 that were cancelled."
 
 User Intent: ${analysis.intent}
 Suggested Action: ${analysis.suggestedAction}
 Execution Result: ${JSON.stringify(executionResult)}
 
-Generate a response:
+Generate a varied, conversational response (not using the forbidden formats above):
 `
 
   try {
@@ -428,7 +492,18 @@ function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: 
     return executionResult.error || `I'm sorry, I couldn't update order ${analysis.entities.orderNumber}. Please try again.`
   } else if (analysis.intent === 'order_query' && executionResult.success) {
     const data = executionResult.data
-    return `You have ${data.pending} pending orders, ${data.done} completed orders, and ${data.cancelled} cancelled orders.`
+    
+    // Generate varied, conversational responses instead of the standard format
+    const responses = [
+      `Right now you have ${data.pending} orders waiting, ${data.done} completed, and ${data.cancelled} cancelled.`,
+      `I see ${data.pending} pending orders, ${data.done} finished orders, and ${data.cancelled} cancelled ones.`,
+      `Current status: ${data.pending} orders in progress, ${data.done} completed orders, ${data.cancelled} cancelled.`,
+      `There are ${data.pending} orders pending, ${data.done} orders done, and ${data.cancelled} cancelled orders.`,
+      `Order summary: ${data.pending} waiting, ${data.done} finished, ${data.cancelled} cancelled.`
+    ]
+    
+    // Pick a random response for variety
+    return responses[Math.floor(Math.random() * responses.length)]
   } else if (analysis.intent === 'menu_query' && executionResult.success) {
     const popular = executionResult.data.popularItems[0]
     return `Your most popular item is ${popular?.name} with ${popular?.orders} orders.`

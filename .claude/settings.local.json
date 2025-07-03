@@ -3,7 +3,8 @@
     "allow": [
       "Bash(curl:*)",
       "Bash(cat:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }
