@@ -3,49 +3,67 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     const apiKey = process.env.GEMINI_API_KEY
-    let isGeminiWorking = false
     
-    if (apiKey) {
-      try {
-        // Test the API with a simple request
-        const testResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: "Say 'OK' if you're working"
-                    }
-                  ]
-                }
-              ]
-            })
-          }
-        )
-        
-        if (testResponse.ok) {
-          isGeminiWorking = true
+    if (!apiKey) {
+      return NextResponse.json({
+        available: false,
+        geminiConfigured: false,
+        model: 'gemini-1.5-flash',
+        features: {
+          voiceControl: false,
+          aiProcessing: false,
+          analytics: true,
+          realTimeCommands: false
         }
-      } catch (error) {
-        console.error('Gemini API test failed:', error)
+      })
+    }
+
+    // Quick API test with minimal quota usage
+    let isGeminiWorking = false
+    try {
+      const testResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: "OK" // Minimal test - just 2 characters
+                  }
+                ]
+              }
+            ]
+          })
+        }
+      )
+      
+      isGeminiWorking = testResponse.ok
+      
+      if (!testResponse.ok) {
+        const errorText = await testResponse.text()
+        console.log(`Gemini API status check failed: ${testResponse.status} - ${errorText}`)
       }
+    } catch (error) {
+      console.error('Gemini API status check error:', error)
+      isGeminiWorking = false
     }
     
     return NextResponse.json({
-      available: isGeminiWorking,
-      geminiConfigured: !!apiKey,
-      model: 'gemini-2.0-flash',
+      available: isGeminiWorking, // Show actual API availability status
+      geminiConfigured: true,
+      geminiWorking: isGeminiWorking,
+      model: isGeminiWorking ? 'gemini-1.5-flash' : 'gemini-1.5-flash (rate limited)',
+      status: isGeminiWorking ? 'available' : 'rate limited - using fallback',
       features: {
-        voiceControl: true,
-        aiProcessing: isGeminiWorking,
+        voiceControl: true, // Always available with fallback
+        aiProcessing: isGeminiWorking, // Only true if API actually works
         analytics: true,
-        realTimeCommands: isGeminiWorking
+        realTimeCommands: true // Always available with fallback
       }
     })
   } catch (error) {

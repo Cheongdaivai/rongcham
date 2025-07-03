@@ -185,9 +185,17 @@ export class VoiceCommandProcessor {
       const doneCount = this.orders.filter(o => o.status === 'done').length
       const cancelledCount = this.orders.filter(o => o.status === 'cancelled').length
       
+      // Generate varied response messages for fallback voice commands
+      const fallbackResponses = [
+        `I see ${pendingCount} orders waiting, ${doneCount} finished, and ${cancelledCount} cancelled.`,
+        `Currently: ${pendingCount} pending, ${doneCount} completed, ${cancelledCount} cancelled orders.`,
+        `Order count: ${pendingCount} in progress, ${doneCount} done, ${cancelledCount} cancelled.`,
+        `There are ${pendingCount} pending orders, ${doneCount} finished orders, ${cancelledCount} cancelled.`
+      ]
+      
       return {
         success: true,
-        message: `Total: ${totalOrders} orders. ${pendingCount} pending, ${doneCount} done, ${cancelledCount} cancelled`,
+        message: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
         data: { total: totalOrders, pending: pendingCount, done: doneCount, cancelled: cancelledCount }
       }
     }

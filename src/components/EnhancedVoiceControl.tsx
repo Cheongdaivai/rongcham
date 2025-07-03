@@ -162,7 +162,9 @@ export function EnhancedVoiceControl({ onTranscriptChange, onCommandProcessed, a
     try {
       const response = await fetch('/api/ai/status')
       const data = await response.json()
-      setAiStatus(data.available ? 'available' : 'unavailable')
+      // Use the status field if available, otherwise fallback to available check
+      const status = data.status || (data.available ? 'available' : 'unavailable')
+      setAiStatus(status)
       setAiModel(data.model || 'Unknown')
     } catch (err) {
       setAiStatus('unavailable')
@@ -504,7 +506,7 @@ export function EnhancedVoiceControl({ onTranscriptChange, onCommandProcessed, a
         <div className="flex gap-3">
           <Button
             onClick={isListening ? stopListening : startListening}
-            disabled={!isSupported || aiStatus !== 'available'}
+            disabled={!isSupported || aiStatus === 'unavailable'}
             className={`${isListening 
               ? 'bg-black text-white hover:bg-gray-800' 
               : 'bg-white text-black border-2 border-black hover:bg-black hover:text-white'
