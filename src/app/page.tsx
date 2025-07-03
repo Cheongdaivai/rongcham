@@ -243,16 +243,19 @@ function HomeContent() {
                 </div>
               </div>
 
-              {/* Responsive Status Badge */}
+              {/* Admin Login Button */}
               <div className="animate-slide-up flex justify-center lg:justify-end" style={{ animationDelay: '0.7s' }}>
-                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 bg-white/10 backdrop-blur-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 rounded-full border border-white/20 shadow-2xl">
-                  <span className={`text-white font-medium text-xs sm:text-sm ${cormorant.className}`}>Fresh • À la minute • Excellence</span>
+                <button 
+                  onClick={() => window.location.href = '/admin/login'}
+                  className="flex items-center gap-2 sm:gap-3 md:gap-4 bg-white/10 backdrop-blur-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 rounded-full border border-white/20 shadow-2xl hover:bg-white/20 hover:shadow-white/30 transition-all duration-500 cursor-pointer group"
+                >
+                  <span className={`text-white font-medium text-xs sm:text-sm ${cormorant.className}`}>Admin Login</span>
                   <div className="relative">
                     <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 bg-emerald-400 rounded-full block animate-pulse" />
                     <span className="absolute inset-0 w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 bg-emerald-300 rounded-full animate-ping" />
                   </div>
-                  <Wine className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-400 animate-pulse" />
-                </div>
+                  <Wine className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-400 animate-pulse group-hover:scale-110 transition-transform duration-300" />
+                </button>
               </div>
             </div>
           </div>
