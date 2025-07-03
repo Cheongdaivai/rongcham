@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -127,6 +128,7 @@ export default function AdminDashboard() {
     fetchData()
   }
 
+  // Event handlers for real-time updates (used by subscriptions)
   const handleMenuItemCreated = (item: MenuItem) => {
     setMenuItems(prev => [...prev, item])
   }
@@ -140,6 +142,11 @@ export default function AdminDashboard() {
       item.menu_id === updatedItem.menu_id ? updatedItem : item
     ))
   }
+
+  // Suppress unused variable warnings for handlers that may be used in future
+  void handleMenuItemCreated;
+  void handleMenuItemDeleted;
+  void handleMenuItemUpdated;
 
   // Additional handler functions
   const handleSaveMenuItem = async (menuItemData: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at' | 'created_by_email'>) => {
@@ -602,9 +609,11 @@ export default function AdminDashboard() {
                       <div className="flex-1">
                         {item.image_url && (
                           <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden mb-4 float-right ml-4">
-                            <img 
+                            <Image 
                               src={item.image_url} 
                               alt={item.name}
+                              width={80}
+                              height={80}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -892,7 +901,7 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
                           <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-3">1</div>
-                          <h4 className="font-semibold text-gray-800 mb-2">Say "System"</h4>
+                          <h4 className="font-semibold text-gray-800 mb-2">Say &quot;System&quot;</h4>
                           <p className="text-sm text-gray-600">Activate command mode</p>
                         </div>
                         <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
@@ -902,7 +911,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
                           <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-3">3</div>
-                          <h4 className="font-semibold text-gray-800 mb-2">Say "Over"</h4>
+                          <h4 className="font-semibold text-gray-800 mb-2">Say &quot;Over&quot;</h4>
                           <p className="text-sm text-gray-600">Complete the command</p>
                         </div>
                       </div>

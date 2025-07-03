@@ -66,7 +66,8 @@ export async function GET() {
         realTimeCommands: true // Always available with fallback
       }
     })
-  } catch (error) {
+  } catch (err) {
+    console.error('AI status check error:', err)
     return NextResponse.json(
       { error: 'Failed to check AI status' },
       { status: 500 }

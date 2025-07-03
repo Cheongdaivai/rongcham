@@ -6,8 +6,9 @@ interface SocketServer extends NetServer {
   io?: SocketIOServer;
 }
 
-export async function GET(req: NextRequest) {
-  const server = (global as any).server as SocketServer;
+export async function GET() {
+  const globalObj = global as { server?: SocketServer };
+  const server = globalObj.server;
   
   if (!server?.io) {
     console.log('Initializing Socket.IO server...');
@@ -28,8 +29,10 @@ export async function GET(req: NextRequest) {
     });
 
     // Store the io instance globally
-    (global as any).server = httpServer;
-    (global as any).server.io = io;
+    globalObj.server = httpServer;
+    if (globalObj.server) {
+      globalObj.server.io = io;
+    }
     
     // Start the server on port 3001 for WebSocket
     httpServer.listen(3001, () => {

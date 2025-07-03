@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to Supabase storage
     const supabase = await createClient()
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('menu-images')
       .upload(fileName, buffer, {
         contentType: file.type,

@@ -11,7 +11,7 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [method, setMethod] = useState<'email' | 'otp'>('otp')
+  // const [method, setMethod] = useState<'email' | 'otp'>('otp') // Unused for now
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,23 +26,14 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      let result
-      if (method === 'otp') {
-        result = await resetPasswordWithOTP(email)
-        if (!result.error) {
-          setMessage('Password reset OTP sent to your email! Please check your inbox and use the OTP to reset your password.')
-        }
+      // Using OTP method by default
+      const result = await resetPasswordWithOTP(email)
+      if (!result.error) {
+        setMessage('Password reset OTP sent to your email! Please check your inbox and use the OTP to reset your password.')
       } else {
-        result = await resetPassword(email)
-        if (!result.error) {
-          setMessage('Password reset email sent! Check your inbox for further instructions.')
-        }
-      }
-
-      if (result.error) {
         setError(result.error.message)
       }
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -57,7 +48,7 @@ export default function ForgotPasswordPage() {
             Forgot your password?
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
         </div>
         

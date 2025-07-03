@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signInWithEmail } from '@/lib/auth'
-import { Mail, Lock, Star, ChefHat, Shield, Award } from 'lucide-react'
+import { Mail, Lock, ChefHat } from 'lucide-react'
+// import { Star, Shield, Award } from 'lucide-react' // Unused icons
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -110,7 +111,7 @@ export default function AdminLogin() {
                 Forgot your password?
               </Link>
               <div className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link 
                   href="/admin/register" 
                   className="text-blue-600 hover:text-blue-500"
@@ -125,7 +126,7 @@ export default function AdminLogin() {
         {/* Testimonial Section */}
         <div className="testimonial">
           <p>
-            "welcome back chefs! let see what gonna do today sir"
+            &quot;welcome back chefs! let see what gonna do today sir&quot;
           </p>
           <div className="user-profile-picture">
             <ChefHat className="w-6 h-6 text-slate-600" />

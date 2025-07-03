@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/auth-server'
 import { getAllOrdersServer, getAllMenuItemsServer, updateOrderStatusServer } from '@/lib/database-server'
+import { Order, MenuItem } from '@/types'
 
 interface GeminiResponse {
   candidates: Array<{
@@ -23,7 +24,25 @@ interface AICommandAnalysis {
   }
   confidence: number
   suggestedAction: string
-  parameters: Record<string, any>
+  parameters: Record<string, string | number | boolean>
+}
+
+interface ExecutionResult {
+  success: boolean
+  error?: string
+  action?: string
+  orderNumber?: string | number
+  data?: {
+    orders?: Order[]
+    menuItems?: MenuItem[]
+    popularItems?: Array<{
+      name: string
+      orders: number
+      price: number
+    }>
+    [key: string]: unknown
+  }
+  [key: string]: unknown
 }
 
 export async function POST(request: NextRequest) {
@@ -73,7 +92,7 @@ export async function POST(request: NextRequest) {
 
 async function analyzeCommandWithGemini(
   command: string, 
-  context: { orders: any[], menuItems: any[] }
+  context: { orders: Order[], menuItems: MenuItem[] }
 ): Promise<AICommandAnalysis> {
   const apiKey = process.env.GEMINI_API_KEY
   
@@ -313,7 +332,7 @@ function fallbackAnalysis(command: string): AICommandAnalysis {
   }
 }
 
-async function executeCommand(analysis: AICommandAnalysis): Promise<any> {
+async function executeCommand(analysis: AICommandAnalysis): Promise<ExecutionResult> {
   try {
     switch (analysis.intent) {
       case 'order_status':
@@ -415,7 +434,7 @@ async function executeCommand(analysis: AICommandAnalysis): Promise<any> {
 
 async function generateSmartResponse(
   analysis: AICommandAnalysis,
-  executionResult: any
+  executionResult: ExecutionResult
 ): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
   
@@ -485,7 +504,7 @@ Generate a varied, conversational response (not using the forbidden formats abov
   }
 }
 
-function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: any): string {
+function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: ExecutionResult): string {
   if (analysis.intent === 'order_status' && executionResult.success) {
     return `Order ${analysis.entities.orderNumber} has been updated to ${analysis.entities.status}.`
   } else if (analysis.intent === 'order_status' && !executionResult.success) {
@@ -493,20 +512,27 @@ function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: 
   } else if (analysis.intent === 'order_query' && executionResult.success) {
     const data = executionResult.data
     
+    if (!data) {
+      return 'No order data available.'
+    }
+    
     // Generate varied, conversational responses instead of the standard format
     const responses = [
-      `Right now you have ${data.pending} orders waiting, ${data.done} completed, and ${data.cancelled} cancelled.`,
-      `I see ${data.pending} pending orders, ${data.done} finished orders, and ${data.cancelled} cancelled ones.`,
-      `Current status: ${data.pending} orders in progress, ${data.done} completed orders, ${data.cancelled} cancelled.`,
-      `There are ${data.pending} orders pending, ${data.done} orders done, and ${data.cancelled} cancelled orders.`,
-      `Order summary: ${data.pending} waiting, ${data.done} finished, ${data.cancelled} cancelled.`
+      `Right now you have ${data.pending || 0} orders waiting, ${data.done || 0} completed, and ${data.cancelled || 0} cancelled.`,
+      `I see ${data.pending || 0} pending orders, ${data.done || 0} finished orders, and ${data.cancelled || 0} cancelled ones.`,
+      `Current status: ${data.pending || 0} orders in progress, ${data.done || 0} completed orders, ${data.cancelled || 0} cancelled.`,
+      `There are ${data.pending || 0} orders pending, ${data.done || 0} orders done, and ${data.cancelled || 0} cancelled orders.`,
+      `Order summary: ${data.pending || 0} waiting, ${data.done || 0} finished, ${data.cancelled || 0} cancelled.`
     ]
     
     // Pick a random response for variety
     return responses[Math.floor(Math.random() * responses.length)]
   } else if (analysis.intent === 'menu_query' && executionResult.success) {
-    const popular = executionResult.data.popularItems[0]
-    return `Your most popular item is ${popular?.name} with ${popular?.orders} orders.`
+    const popular = executionResult.data?.popularItems?.[0]
+    if (popular) {
+      return `Your most popular item is ${popular.name} with ${popular.orders} orders.`
+    }
+    return 'No menu data available.'
   } else if (analysis.intent === 'help') {
     return 'You can say things like "mark order 123 as done", "how many pending orders", or "show popular items".'
   } else {

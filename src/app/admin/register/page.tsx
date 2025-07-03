@@ -53,7 +53,7 @@ export default function RegisterPage() {
           router.push('/admin/login')
         }, 3000)
       }
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

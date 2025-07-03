@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createOrderServer, getAllOrdersServer, updateOrderStatusServer } from '@/lib/database-server'
 import { getServerUser } from '@/lib/auth-server'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // The RLS policies will automatically filter orders to the authenticated user
     const orders = await getAllOrdersServer()
@@ -36,10 +36,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert items to the format expected by createOrder
-    const orderItems = items.map((item: any) => ({
-      menu_id: item.menu_id || item.id,
-      quantity: item.quantity
-    }))
+    const orderItems = items
+      .map((item: { menu_id?: string; id?: string; quantity: number }) => ({
+        menu_id: item.menu_id || item.id,
+        quantity: item.quantity
+      }))
+      .filter((item): item is { menu_id: string; quantity: number } => !!item.menu_id)
 
     console.log('Converted order items:', orderItems)
 
