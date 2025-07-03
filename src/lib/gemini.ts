@@ -15,7 +15,7 @@ export interface AICommandAnalysis {
   intent: 'order_status' | 'order_query' | 'menu_query' | 'help' | 'unknown'
   entities: {
     orderNumber?: number
-    status?: 'pending' | 'preparing' | 'done' | 'cancelled'
+    status?: 'pending' | 'done' | 'cancelled'
     quantity?: number
     menuItem?: string
     timeframe?: string
