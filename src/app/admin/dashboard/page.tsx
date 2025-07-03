@@ -34,7 +34,7 @@ import {
 } from 'lucide-react'
 
 export default function AdminDashboard() {
-  const [, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'menu' | 'analytics' | 'voice'>('orders')
@@ -270,14 +270,21 @@ export default function AdminDashboard() {
                 <p className="text-gray-600">Manage your restaurant operations</p>
               </div>
             </div>
-            <Button 
-              onClick={handleSignOut} 
-              variant="outline"
-              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-4">
+              {user && (
+                <div className="text-black font-medium">
+                  {user.email}
+                </div>
+              )}
+              <Button 
+                onClick={handleSignOut} 
+                variant="outline"
+                className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
