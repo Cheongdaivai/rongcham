@@ -1,6 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { CartDrawer } from './CartDrawer';
+import { Button } from './ui/button';
+import { Settings } from 'lucide-react';
 
 export function Header() {
   return (
@@ -48,6 +51,24 @@ export function Header() {
 
           {/* Responsive Navigation & Cart */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* Admin Button - Only visible on larger screens */}
+            <div className="hidden sm:block">
+              <Link href="/admin/login">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                  <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Button>
+              </Link>
+            </div>
+            
+            {/* Mobile Admin Button - Only visible on small screens */}
+            <div className="block sm:hidden">
+              <Link href="/admin/login">
+                <Button variant="outline" size="sm" className="p-2">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
             {/* Mobile brand text - visible only on small screens */}
             <div className="flex md:hidden flex-col text-right mr-2">
               <div className="text-sm font-bold bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 bg-clip-text text-transparent">
