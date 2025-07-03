@@ -82,7 +82,7 @@ async function analyzeCommandWithGemini(
   }
 
   const systemPrompt = `
-You are an AI assistant for a Thai restaurant ordering system. Analyze voice commands and extract intent and entities.
+You are an AI assistant for a restaurant ordering system. Analyze voice commands and extract intent and entities.
 
 AVAILABLE ORDERS:
 ${context.orders.slice(0, 10).map(o => `Order #${o.order_number}: ${o.status} - $${o.total_amount}`).join('\n')}
@@ -424,7 +424,7 @@ async function generateSmartResponse(
   }
 
   const contextPrompt = `
-You are a helpful AI assistant for a Thai restaurant. Generate a natural, conversational response (2-3 sentences max) that:
+You are a helpful AI assistant for a restaurant. Generate a natural, conversational response (2-3 sentences max) that:
 1. Confirms what was done
 2. Provides relevant information from the result
 3. Uses a friendly, professional tone
