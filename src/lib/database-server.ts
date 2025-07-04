@@ -98,6 +98,7 @@ export async function updateMenuItemServer(menu_id: string, updates: Partial<Men
     
     // Remove email from updates as it should not be changeable
     const { created_by_email, ...safeUpdates } = updates
+    void created_by_email // Explicitly mark as intentionally unused
     
     console.log('updateMenuItemServer - Safe updates:', safeUpdates)
     console.log('updateMenuItemServer - Menu ID:', menu_id)
@@ -196,9 +197,9 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
 
     // Calculate total amount
     const totalAmount = orderItems.reduce((total, item) => {
-      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
+      const menuItem = menuItems?.find((menu: Record<string, unknown>) => menu.menu_id === item.menu_id)
       if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
-      return total + (menuItem.price * item.quantity)
+      return total + ((menuItem.price as number) * item.quantity)
     }, 0)
 
     console.log('Calculated total amount:', totalAmount)
@@ -230,14 +231,14 @@ export async function createOrderServer(orderItems: { menu_id: string; quantity:
 
     // Create order items
     const orderItemsToInsert = orderItems.map(item => {
-      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
+      const menuItem = menuItems?.find((menu: Record<string, unknown>) => menu.menu_id === item.menu_id)
       if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
       
       return {
         order_id: orderData.order_id,
         menu_id: item.menu_id,
         quantity: item.quantity,
-        unit_price: menuItem.price
+        unit_price: menuItem.price as number
       }
     })
 

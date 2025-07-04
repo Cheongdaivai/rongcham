@@ -34,7 +34,7 @@ export function isMenuImageUrl(url: string): boolean {
   
   try {
     return url.includes('/storage/v1/object/public/menu-images/')
-  } catch (error) {
+  } catch {
     return false
   }
 }

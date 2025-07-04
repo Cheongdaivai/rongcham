@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 })
     }
 
-    const menuItem = await createMenuItemServer(menuItemData, user.email)
+    const menuItem = await createMenuItemServer(menuItemData)
     
     if (!menuItem) {
       return NextResponse.json({ error: 'Failed to create menu item' }, { status: 500 })

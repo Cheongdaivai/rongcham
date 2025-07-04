@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export function CartDrawer() {
-  const { items, updateQuantity, removeItem, total, itemCount, clearCart, createOrder } = useCart();
+  const { items, updateQuantity, removeItem, total, itemCount, createOrder } = useCart();
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [prevItemCount, setPrevItemCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);

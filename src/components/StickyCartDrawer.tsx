@@ -13,7 +13,7 @@ interface StickyCartDrawerProps {
 }
 
 export function StickyCartDrawer({ isOpen, onClose }: StickyCartDrawerProps) {
-  const { items, updateQuantity, removeItem, total, itemCount, clearCart, showCheckoutModal, createOrder } = useCart();
+  const { items, updateQuantity, removeItem, total, itemCount, showCheckoutModal, createOrder } = useCart();
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [prevItemCount, setPrevItemCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);

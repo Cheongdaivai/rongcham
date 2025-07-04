@@ -4,7 +4,26 @@
       "Bash(curl:*)",
       "Bash(cat:*)",
       "Bash(grep:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(bun run:*)",
+      "Bash(bun install:*)",
+      "Bash(bunx next lint:*)",
+      "Bash(bunx next:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(./node_modules/.bin/next lint)",
+      "Bash(./node_modules/.bin/next:*)",
+      "Bash(bunx update-browserslist-db:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(NODE_ENV=production bun run build)",
+      "Bash(bun remove:*)",
+      "Bash(bun add:*)"
     ],
     "deny": []
   }

@@ -22,12 +22,12 @@ export interface AICommandAnalysis {
   }
   confidence: number
   suggestedAction: string
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
 }
 
 export class GeminiAIService {
   private genAI: GoogleGenerativeAI
-  private model: any
+  private model: unknown
 
   constructor() {
     this.genAI = getGeminiClient()
@@ -101,7 +101,7 @@ Now analyze this command: "${command}"
 `
 
     try {
-      const result = await this.model.generateContent(systemPrompt)
+      const result = await (this.model as any).generateContent(systemPrompt)
       const response = await result.response
       
       // Check if response indicates unavailable model
@@ -172,9 +172,9 @@ Now analyze this command: "${command}"
       const orderMatch = lowerCommand.match(/order\s+(\d+)/)
       const orderNumber = orderMatch ? parseInt(orderMatch[1]) : undefined
       
-      let status: any = undefined
+      let status: 'pending' | 'done' | 'cancelled' | undefined = undefined
       if (lowerCommand.includes('done') || lowerCommand.includes('complete')) status = 'done'
-      else if (lowerCommand.includes('preparing')) status = 'preparing'
+      else if (lowerCommand.includes('preparing')) status = 'done'  // Map preparing to done
       else if (lowerCommand.includes('cancel')) status = 'cancelled'
       else if (lowerCommand.includes('pending')) status = 'pending'
       
@@ -228,7 +228,7 @@ Now analyze this command: "${command}"
 
   async generateSmartResponse(
     analysis: AICommandAnalysis,
-    executionResult: any
+    executionResult: unknown
   ): Promise<string> {
     
     const contextPrompt = `
@@ -255,14 +255,14 @@ Examples:
 `
 
     try {
-      const result = await this.model.generateContent(contextPrompt)
+      const result = await (this.model as any).generateContent(contextPrompt)
       const response = await result.response
       return response.text().trim()
     } catch (error) {
       console.error('Error generating smart response:', error)
       
       // Fallback response
-      if (analysis.intent === 'order_status' && executionResult.success) {
+      if (analysis.intent === 'order_status' && (executionResult as any).success) {
         return `Order ${analysis.entities.orderNumber} has been updated to ${analysis.entities.status}.`
       } else if (analysis.intent === 'order_query') {
         return 'Order information has been retrieved.'

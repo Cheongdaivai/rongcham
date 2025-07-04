@@ -128,25 +128,6 @@ export default function AdminDashboard() {
     fetchData()
   }
 
-  // Event handlers for real-time updates (used by subscriptions)
-  const handleMenuItemCreated = (item: MenuItem) => {
-    setMenuItems(prev => [...prev, item])
-  }
-
-  const handleMenuItemDeleted = (itemId: string) => {
-    setMenuItems(prev => prev.filter(item => item.menu_id !== itemId))
-  }
-
-  const handleMenuItemUpdated = (updatedItem: MenuItem) => {
-    setMenuItems(prev => prev.map(item => 
-      item.menu_id === updatedItem.menu_id ? updatedItem : item
-    ))
-  }
-
-  // Suppress unused variable warnings for handlers that may be used in future
-  void handleMenuItemCreated;
-  void handleMenuItemDeleted;
-  void handleMenuItemUpdated;
 
   // Additional handler functions
   const handleSaveMenuItem = async (menuItemData: Omit<MenuItem, 'menu_id' | 'created_at' | 'updated_at' | 'created_by_email'>) => {
@@ -923,7 +904,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <h5 className="font-semibold text-yellow-800 mb-1">Important:</h5>
-                            <p className="text-sm text-yellow-700">Always start with "System" and end with "Over" for accurate recognition. Speak clearly and wait for responses.</p>
+                            <p className="text-sm text-yellow-700">Always start with &quot;System&quot; and end with &quot;Over&quot; for accurate recognition. Speak clearly and wait for responses.</p>
                           </div>
                         </div>
                       </div>

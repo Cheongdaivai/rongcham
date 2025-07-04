@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as NetServer, createServer } from 'http';
 
@@ -7,8 +6,7 @@ interface SocketServer extends NetServer {
 }
 
 export async function GET() {
-  const globalObj = global as { server?: SocketServer };
-  const server = globalObj.server;
+  const server = (global as Record<string, unknown>).server as SocketServer;
   
   if (!server?.io) {
     console.log('Initializing Socket.IO server...');
@@ -29,10 +27,8 @@ export async function GET() {
     });
 
     // Store the io instance globally
-    globalObj.server = httpServer;
-    if (globalObj.server) {
-      globalObj.server.io = io;
-    }
+    (global as Record<string, unknown>).server = httpServer;
+    ((global as Record<string, unknown>).server as SocketServer).io = io;
     
     // Start the server on port 3001 for WebSocket
     httpServer.listen(3001, () => {

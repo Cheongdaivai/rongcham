@@ -6,7 +6,7 @@ export interface AIVoiceCommandResult {
   success: boolean
   message: string
   smartResponse: string
-  data?: any
+  data?: unknown
   analysis?: AICommandAnalysis
   confidence: number
 }
@@ -106,7 +106,7 @@ export class AIVoiceCommandProcessor {
     }
   }
 
-  private async executeCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: any}> {
+  private async executeCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: unknown}> {
     switch (analysis.intent) {
       case 'order_status':
         return await this.handleOrderStatusCommand(analysis)
@@ -128,7 +128,7 @@ export class AIVoiceCommandProcessor {
     }
   }
 
-  private async handleOrderStatusCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: any}> {
+  private async handleOrderStatusCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: unknown}> {
     const { orderNumber, status } = analysis.entities
 
     if (!orderNumber) {
@@ -189,7 +189,7 @@ export class AIVoiceCommandProcessor {
     }
   }
 
-  private async handleOrderQueryCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: any}> {
+  private async handleOrderQueryCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: unknown}> {
     const params = analysis.parameters
 
     if (params?.filter === 'pending' || analysis.suggestedAction.includes('pending')) {
@@ -242,7 +242,7 @@ export class AIVoiceCommandProcessor {
     }
   }
 
-  private async handleMenuQueryCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: any}> {
+  private async handleMenuQueryCommand(analysis: AICommandAnalysis): Promise<{success: boolean, message: string, data?: unknown}> {
     const params = analysis.parameters
 
     if (params?.sortBy === 'popularity' || analysis.suggestedAction.includes('popular')) {
@@ -284,7 +284,7 @@ export class AIVoiceCommandProcessor {
     }
   }
 
-  private handleHelpCommand(): {success: boolean, message: string, data?: any} {
+  private handleHelpCommand(): {success: boolean, message: string, data?: unknown} {
     const helpText = `Here's what I can help you with:
 • Update orders: "Mark order 123 as done" or "Cancel order 456"
 • Check orders: "How many pending orders?"

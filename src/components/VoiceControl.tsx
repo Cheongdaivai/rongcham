@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,8 +37,6 @@ export function VoiceControl({ onCommandResult }: VoiceControlProps) {
     transcript,
     error,
     isKeywordActivated,
-    startListening,
-    stopListening,
     toggleListening
   } = useVoiceControl({
     activationKeywords: ['hey restaurant', 'voice control', 'activate voice'],
@@ -103,7 +101,7 @@ export function VoiceControl({ onCommandResult }: VoiceControlProps) {
 
         {transcript && (
           <div className="p-2 bg-gray-50 rounded text-sm">
-            <strong>Heard:</strong> "{transcript}"
+            <strong>Heard:</strong> &quot;{transcript}&quot;
           </div>
         )}
 
@@ -132,14 +130,14 @@ export function VoiceControl({ onCommandResult }: VoiceControlProps) {
       <div className="border-t pt-4">
         <h4 className="font-medium text-sm text-gray-700 mb-2">How to use:</h4>
         <div className="text-xs text-gray-600 space-y-1">
-          <div>1. Click "Start Listening" to begin</div>
-          <div>2. Say "Hey restaurant" to activate voice control</div>
+          <div>1. Click &quot;Start Listening&quot; to begin</div>
+          <div>2. Say &quot;Hey restaurant&quot; to activate voice control</div>
           <div>3. Give commands like:</div>
           <div className="ml-4 space-y-1">
-            <div>• "Mark order 123 as done"</div>
-            <div>• "How many pending orders?"</div>
-            <div>• "Show popular items"</div>
-            <div>• "Help" for more commands</div>
+            <div>• &quot;Mark order 123 as done&quot;</div>
+            <div>• &quot;How many pending orders?&quot;</div>
+            <div>• &quot;Show popular items&quot;</div>
+            <div>• &quot;Help&quot; for more commands</div>
           </div>
           <div>4. Voice control stays active for 30 seconds</div>
         </div>

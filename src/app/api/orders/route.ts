@@ -36,12 +36,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert items to the format expected by createOrder
-    const orderItems = items
-      .map((item: { menu_id?: string; id?: string; quantity: number }) => ({
-        menu_id: item.menu_id || item.id,
-        quantity: item.quantity
-      }))
-      .filter((item): item is { menu_id: string; quantity: number } => !!item.menu_id)
+    const orderItems = items.map((item: Record<string, unknown>) => ({
+      menu_id: (item.menu_id || item.id) as string,
+      quantity: item.quantity as number
+    }))
 
     console.log('Converted order items:', orderItems)
 

@@ -19,6 +19,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.2",
     "@types/ws": "^8.18.1",
+    "caniuse-lite": "^1.0.30001726",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.523.0",

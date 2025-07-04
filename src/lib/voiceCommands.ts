@@ -4,12 +4,12 @@ import { updateOrderStatus, getAllOrders, getAllMenuItems } from './database'
 export interface VoiceCommandResult {
   success: boolean
   message: string
-  data?: any
+  data?: unknown
 }
 
 export class VoiceCommandProcessor {
   private orders: Order[] = []
-  private menuItems: any[] = []
+  private menuItems: unknown[] = []
   
   constructor() {
     this.loadData()
@@ -211,9 +211,9 @@ export class VoiceCommandProcessor {
 
   private async handleMenuQueryCommand(command: string): Promise<VoiceCommandResult> {
     if (command.includes('popular') || command.includes('best selling')) {
-      const popularItems = this.menuItems
-        .filter(item => item.total_ordered > 0)
-        .sort((a, b) => b.total_ordered - a.total_ordered)
+      const popularItems = (this.menuItems as any[])
+        .filter((item: any) => item.total_ordered > 0)
+        .sort((a: any, b: any) => b.total_ordered - a.total_ordered)
         .slice(0, 5)
 
       if (popularItems.length === 0) {
@@ -233,7 +233,7 @@ export class VoiceCommandProcessor {
     }
 
     // Default: show available menu items
-    const availableItems = this.menuItems.filter(item => item.availability)
+    const availableItems = (this.menuItems as any[]).filter((item: any) => item.availability)
     return {
       success: true,
       message: `You have ${availableItems.length} available menu items`,

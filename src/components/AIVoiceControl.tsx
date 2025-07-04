@@ -91,8 +91,6 @@ export function AIVoiceControl({ onCommandResult }: AIVoiceControlProps) {
     transcript,
     error,
     isKeywordActivated,
-    startListening,
-    stopListening,
     toggleListening
   } = useVoiceControl({
     activationKeywords: ['hey restaurant', 'voice control', 'activate voice'],
@@ -189,7 +187,7 @@ export function AIVoiceControl({ onCommandResult }: AIVoiceControlProps) {
 
         {transcript && (
           <div className="p-2 bg-gray-50 rounded text-sm">
-            <strong>You said:</strong> "{transcript}"
+            <strong>You said:</strong> &quot;{transcript}&quot;
           </div>
         )}
 
@@ -242,14 +240,14 @@ export function AIVoiceControl({ onCommandResult }: AIVoiceControlProps) {
         <div className="text-xs text-gray-600 space-y-1">
           <div>💬 <strong>Natural Language:</strong> Speak normally - AI understands context!</div>
           <div className="ml-4 space-y-1">
-            <div>• "Please mark order 123 as completed"</div>
-            <div>• "How many pending orders are there?"</div>
-            <div>• "What's our most popular dish today?"</div>
-            <div>• "Set order 456 to cancelled please"</div>
-            <div>• "Show me the menu statistics"</div>
+            <div>• &quot;Please mark order 123 as completed&quot;</div>
+            <div>• &quot;How many pending orders are there?&quot;</div>
+            <div>• &quot;What&apos;s our most popular dish today?&quot;</div>
+            <div>• &quot;Set order 456 to cancelled please&quot;</div>
+            <div>• &quot;Show me the menu statistics&quot;</div>
           </div>
           <div className="pt-2 text-xs">
-            <div>1. Say "Hey restaurant" to activate</div>
+            <div>1. Say &quot;Hey restaurant&quot; to activate</div>
             <div>2. Speak your command naturally</div>
             <div>3. AI will understand and execute</div>
             <div>4. Listen for voice confirmation</div>

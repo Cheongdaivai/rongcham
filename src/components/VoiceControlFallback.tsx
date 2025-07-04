@@ -5,19 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Keyboard } from 'lucide-react';
+import { Keyboard } from 'lucide-react';
 
 interface VoiceControlFallbackProps {
   onTranscriptChange?: (transcript: string) => void;
-  onCommandProcessed?: (command: string, result: any) => void;
+  onCommandProcessed?: (command: string, result: unknown) => void;
 }
 
-export function VoiceControlFallback({ onTranscriptChange, onCommandProcessed }: VoiceControlFallbackProps) {
+export function VoiceControlFallback({ onCommandProcessed }: VoiceControlFallbackProps) {
   const [textInput, setTextInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
   const [commandResult, setCommandResult] = useState('');
-  const [lastAnalysis, setLastAnalysis] = useState<any>(null);
+  const [lastAnalysis, setLastAnalysis] = useState<Record<string, unknown> | null>(null);
 
   const processTextCommand = async (command: string) => {
     setLastCommand(command);
@@ -83,7 +83,7 @@ export function VoiceControlFallback({ onTranscriptChange, onCommandProcessed }:
         <div className="bg-blue-50 border-2 border-blue-200 rounded-md p-4">
           <h4 className="font-semibold text-blue-800 mb-2">Voice Control Alternative</h4>
           <p className="text-sm text-blue-700">
-            Since voice recognition isn't available in your browser, you can type commands instead.
+            Since voice recognition isn&apos;t available in your browser, you can type commands instead.
             All the same AI features are available through text input.
           </p>
         </div>
@@ -117,7 +117,7 @@ export function VoiceControlFallback({ onTranscriptChange, onCommandProcessed }:
               'How many pending orders?',
               'Mark order 123 as done',
               'Show popular items',
-              'What\'s today\'s revenue?'
+              'What&apos;s today&apos;s revenue?'
             ].map((command) => (
               <Button
                 key={command}
@@ -158,12 +158,12 @@ export function VoiceControlFallback({ onTranscriptChange, onCommandProcessed }:
               <label className="text-sm font-medium text-black">AI Analysis:</label>
               <div className="mt-1 p-3 bg-gray-100 border-2 border-gray-300 rounded-md">
                 <div className="text-xs space-y-1">
-                  <p><strong>Intent:</strong> {lastAnalysis.intent}</p>
-                  <p><strong>Confidence:</strong> {(lastAnalysis.confidence * 100).toFixed(1)}%</p>
-                  {lastAnalysis.entities && Object.keys(lastAnalysis.entities).length > 0 && (
+                  <p><strong>Intent:</strong> {String(lastAnalysis.intent)}</p>
+                  <p><strong>Confidence:</strong> {(Number(lastAnalysis.confidence) * 100).toFixed(1)}%</p>
+                  {lastAnalysis.entities && Object.keys(lastAnalysis.entities as object).length > 0 ? (
                     <p><strong>Entities:</strong> {JSON.stringify(lastAnalysis.entities)}</p>
-                  )}
-                  <p><strong>Action:</strong> {lastAnalysis.suggestedAction}</p>
+                  ) : null}
+                  <p><strong>Action:</strong> {String(lastAnalysis.suggestedAction)}</p>
                 </div>
               </div>
             </div>
@@ -174,12 +174,12 @@ export function VoiceControlFallback({ onTranscriptChange, onCommandProcessed }:
         <div className="pt-4 border-t-2 border-gray-200">
           <p className="text-sm font-medium text-black mb-2">Text Command Examples:</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-700">
-            <div>• "How many pending orders?"</div>
-            <div>• "Mark order 123 as done"</div>
-            <div>• "What are our popular items?"</div>
-            <div>• "Show me today's revenue"</div>
-            <div>• "List all preparing orders"</div>
-            <div>• "Help" for more commands</div>
+            <div>• &quot;How many pending orders?&quot;</div>
+            <div>• &quot;Mark order 123 as done&quot;</div>
+            <div>• &quot;What are our popular items?&quot;</div>
+            <div>• &quot;Show me today&apos;s revenue&quot;</div>
+            <div>• &quot;List all preparing orders&quot;</div>
+            <div>• &quot;Help&quot; for more commands</div>
           </div>
         </div>
       </div>

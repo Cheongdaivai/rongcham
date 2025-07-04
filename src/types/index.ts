@@ -11,6 +11,7 @@ export interface MenuItem {
   updated_at: string;
   rating?: number;
   chef_signature?: string;
+  [key: string]: unknown;
 }
 
 export interface Order {
@@ -23,6 +24,7 @@ export interface Order {
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
+  [key: string]: unknown;
 }
 
 export interface OrderItem {

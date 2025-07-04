@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-// import { useEffect } from 'react' // Unused for now
 import { useRouter } from 'next/navigation'
 import { updatePassword } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
@@ -54,7 +53,7 @@ export default function ResetPasswordPage() {
           router.push('/admin/login')
         }, 2000)
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

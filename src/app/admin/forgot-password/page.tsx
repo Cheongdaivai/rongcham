@@ -11,7 +11,7 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  // const [method, setMethod] = useState<'email' | 'otp'>('otp') // Unused for now
+  const [method] = useState<'email' | 'otp'>('otp')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
       } else {
         setError(result.error.message)
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

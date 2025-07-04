@@ -28,8 +28,9 @@ export interface AnalyticsData {
   periodEnd: string
 }
 
-async function getDailyRevenue(supabase: SupabaseClient, startDate: string, endDate: string, businessEmail?: string): Promise<DailyRevenue[]> {
-  let query = supabase
+async function getDailyRevenue(supabase: Awaited<ReturnType<typeof createClient>>, startDate: string, endDate: string, businessEmail?: string): Promise<DailyRevenue[]> {
+  const supabaseClient = supabase
+  let query = supabaseClient
     .from('orders')
     .select('created_at, total_amount')
     .eq('status', 'done') // Only completed orders count toward revenue
@@ -50,12 +51,12 @@ async function getDailyRevenue(supabase: SupabaseClient, startDate: string, endD
   // Group by date and calculate revenue
   const revenueByDate = new Map<string, { revenue: number; count: number }>()
   
-  data.forEach((order: { created_at: string; total_amount: string | number }) => {
-    const date = new Date(order.created_at).toISOString().split('T')[0]
+  data.forEach((order: Record<string, unknown>) => {
+    const date = new Date(order.created_at as string).toISOString().split('T')[0]
     const existing = revenueByDate.get(date) || { revenue: 0, count: 0 }
     
     revenueByDate.set(date, {
-      revenue: existing.revenue + parseFloat(String(order.total_amount)),
+      revenue: existing.revenue + parseFloat(order.total_amount as string),
       count: existing.count + 1
     })
   })
@@ -71,8 +72,9 @@ async function getDailyRevenue(supabase: SupabaseClient, startDate: string, endD
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
-async function getMenuItemAnalytics(supabase: SupabaseClient, startDate: string, endDate: string, businessEmail?: string): Promise<MenuItemAnalytics[]> {
-  let query = supabase
+async function getMenuItemAnalytics(supabase: Awaited<ReturnType<typeof createClient>>, startDate: string, endDate: string, businessEmail?: string): Promise<MenuItemAnalytics[]> {
+  const supabaseClient = supabase
+  let query = supabaseClient
     .from('order_item')
     .select(`
       quantity,
@@ -99,35 +101,24 @@ async function getMenuItemAnalytics(supabase: SupabaseClient, startDate: string,
   // Group by menu item and calculate stats
   const itemStats = new Map<string, { name: string; totalOrdered: number; revenue: number; totalPrice: number; orderCount: number }>()
   
-  data.forEach((item: unknown) => {
-    // Type guard for the item structure
-    if (typeof item === 'object' && item !== null) {
-      const typedItem = item as {
-        quantity: number;
-        unit_price: string | number;
-        subtotal: string | number;
-        menu_item: { menu_id: string; name: string }[];
-      };
-      
-      if (typedItem.menu_item && typedItem.menu_item.length > 0) {
-        const menuId = typedItem.menu_item[0].menu_id
-        const existing = itemStats.get(menuId) || { 
-          name: typedItem.menu_item[0].name, 
-          totalOrdered: 0, 
-          revenue: 0, 
-          totalPrice: 0,
-          orderCount: 0
-        }
-        
-        itemStats.set(menuId, {
-          name: existing.name,
-          totalOrdered: existing.totalOrdered + typedItem.quantity,
-          revenue: existing.revenue + parseFloat(String(typedItem.subtotal)),
-          totalPrice: existing.totalPrice + parseFloat(String(typedItem.unit_price)),
-          orderCount: existing.orderCount + 1
-        })
-      }
+  data.forEach((item: Record<string, unknown>) => {
+    const menuItem = item.menu_item as Record<string, unknown>
+    const menuId = menuItem.menu_id as string
+    const existing = itemStats.get(menuId) || { 
+      name: menuItem.name as string, 
+      totalOrdered: 0, 
+      revenue: 0, 
+      totalPrice: 0,
+      orderCount: 0
     }
+    
+    itemStats.set(menuId, {
+      name: existing.name,
+      totalOrdered: existing.totalOrdered + (item.quantity as number),
+      revenue: existing.revenue + parseFloat(item.subtotal as string),
+      totalPrice: existing.totalPrice + parseFloat(item.unit_price as string),
+      orderCount: existing.orderCount + 1
+    })
   })
 
   // Convert to array and sort by total ordered (descending)
@@ -244,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate daily stats
-    const totalRevenue = orders.reduce((sum: number, order: { total_amount: string | number }) => sum + parseFloat(String(order.total_amount)), 0)
+    const totalRevenue = orders.reduce((sum: number, order: Record<string, unknown>) => sum + parseFloat(order.total_amount as string), 0)
     const orderCount = orders.length
 
     return NextResponse.json({

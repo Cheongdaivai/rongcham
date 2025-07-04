@@ -1,5 +1,5 @@
 import { createClient } from './supabase/client'
-import { MenuItem, Order, OrderItem } from '@/types'
+import { MenuItem, Order } from '@/types'
 
 // Client-side database functions
 const getSupabaseClient = () => createClient()
@@ -89,6 +89,7 @@ export async function updateMenuItem(menu_id: string, updates: Partial<MenuItem>
     
     // Remove email from updates as it should not be changeable
     const { created_by_email, ...safeUpdates } = updates
+    void created_by_email // Explicitly mark as intentionally unused
     
     // RLS policy will ensure user can only update their own items
     const { data, error } = await supabase
@@ -164,9 +165,9 @@ export async function createOrder(orderItems: { menu_id: string; quantity: numbe
 
     // Calculate total amount
     const totalAmount = orderItems.reduce((total, item) => {
-      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
+      const menuItem = menuItems?.find((menu: Record<string, unknown>) => menu.menu_id === item.menu_id)
       if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
-      return total + (menuItem.price * item.quantity)
+      return total + ((menuItem.price as number) * item.quantity)
     }, 0)
 
    console.log('Creating order with total amount:', totalAmount)
@@ -204,14 +205,14 @@ console.log('Order number assigned:', orderData.order_number)
 
     // Create order items
     const orderItemsToInsert = orderItems.map(item => {
-      const menuItem = menuItems?.find((menu: any) => menu.menu_id === item.menu_id)
+      const menuItem = menuItems?.find((menu: Record<string, unknown>) => menu.menu_id === item.menu_id)
       if (!menuItem) throw new Error(`Menu item not found: ${item.menu_id}`)
       
       return {
         order_id: orderData.order_id,
         menu_id: item.menu_id,
         quantity: item.quantity,
-        unit_price: menuItem.price
+        unit_price: menuItem.price as number
       }
     })
 
@@ -362,12 +363,12 @@ export function subscribeToOrders(callback: (order: Order) => void) {
   const supabase = getSupabaseClient()
   return supabase
     .channel('orders')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async (payload: any) => {
-      const order = await getOrderById(payload.new.order_id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async (payload: Record<string, unknown>) => {
+      const order = await getOrderById((payload.new as any).order_id)
       if (order) callback(order)
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, async (payload: any) => {
-      const order = await getOrderById(payload.new.order_id)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, async (payload: Record<string, unknown>) => {
+      const order = await getOrderById((payload.new as any).order_id)
       if (order) callback(order)
     })
     .subscribe()
@@ -377,7 +378,7 @@ export function subscribeToMenuItems(callback: (menuItem: MenuItem) => void) {
   const supabase = getSupabaseClient()
   return supabase
     .channel('menu_items')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_item' }, (payload: any) => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_item' }, (payload: Record<string, unknown>) => {
       callback(payload.new as MenuItem)
     })
     .subscribe()

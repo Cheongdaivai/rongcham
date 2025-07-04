@@ -30,6 +30,7 @@ export function FoodItemCard({ item }: FoodItemCardProps) {
       image_url: item.image,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      total_ordered: 0,
     };
     addItem(menuItem);
   };

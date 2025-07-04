@@ -154,7 +154,8 @@ export default function MenuItemModal({
         description: formData.description.trim(),
         price,
         image_url: imageUrl || undefined,
-        availability: formData.availability
+        availability: formData.availability,
+        total_ordered: 0
       }
       
       await onSave(menuItemData)

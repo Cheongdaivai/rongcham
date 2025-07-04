@@ -24,25 +24,7 @@ interface AICommandAnalysis {
   }
   confidence: number
   suggestedAction: string
-  parameters: Record<string, string | number | boolean>
-}
-
-interface ExecutionResult {
-  success: boolean
-  error?: string
-  action?: string
-  orderNumber?: string | number
-  data?: {
-    orders?: Order[]
-    menuItems?: MenuItem[]
-    popularItems?: Array<{
-      name: string
-      orders: number
-      price: number
-    }>
-    [key: string]: unknown
-  }
-  [key: string]: unknown
+  parameters: Record<string, unknown>
 }
 
 export async function POST(request: NextRequest) {
@@ -65,7 +47,7 @@ export async function POST(request: NextRequest) {
     ])
 
     // Analyze command with Gemini
-    const analysis = await analyzeCommandWithGemini(command, { orders, menuItems })
+    const analysis = await analyzeCommandWithGemini(command, { orders: orders as Record<string, unknown>[], menuItems: menuItems as Record<string, unknown>[] })
     
     // Execute the command based on analysis
     const executionResult = await executeCommand(analysis)
@@ -92,7 +74,7 @@ export async function POST(request: NextRequest) {
 
 async function analyzeCommandWithGemini(
   command: string, 
-  context: { orders: Order[], menuItems: MenuItem[] }
+  context: { orders: Record<string, unknown>[], menuItems: Record<string, unknown>[] }
 ): Promise<AICommandAnalysis> {
   const apiKey = process.env.GEMINI_API_KEY
   
@@ -104,10 +86,10 @@ async function analyzeCommandWithGemini(
 You are an AI assistant for a restaurant ordering system. Analyze voice commands and extract intent and entities.
 
 AVAILABLE ORDERS:
-${context.orders.slice(0, 10).map(o => `Order #${o.order_number}: ${o.status} - $${o.total_amount}`).join('\n')}
+${context.orders.slice(0, 10).map((o: Record<string, unknown>) => `Order #${o.order_number}: ${o.status} - $${o.total_amount}`).join('\n')}
 
 AVAILABLE MENU ITEMS:
-${context.menuItems.slice(0, 20).map(m => `${m.name} (${m.availability ? 'available' : 'unavailable'}) - ordered ${m.total_ordered || 0} times`).join('\n')}
+${context.menuItems.slice(0, 20).map((m: Record<string, unknown>) => `${m.name} (${m.availability ? 'available' : 'unavailable'}) - ordered ${m.total_ordered || 0} times`).join('\n')}
 
 COMMAND TYPES:
 1. ORDER_STATUS: Update order status (e.g., "mark order 123 as done", "cancel order 456", "complete order 789", "finish order 123", "mark as complete the order")
@@ -332,14 +314,14 @@ function fallbackAnalysis(command: string): AICommandAnalysis {
   }
 }
 
-async function executeCommand(analysis: AICommandAnalysis): Promise<ExecutionResult> {
+async function executeCommand(analysis: AICommandAnalysis): Promise<Record<string, unknown>> {
   try {
     switch (analysis.intent) {
       case 'order_status':
         if (analysis.entities.orderNumber && analysis.entities.status) {
           // Find the order by order_number to get the order_id
           const orders = await getAllOrdersServer()
-          const targetOrder = orders.find(o => o.order_number === analysis.entities.orderNumber)
+          const targetOrder = orders.find((o) => (o as any).order_number === analysis.entities.orderNumber)
           
           if (!targetOrder) {
             return { 
@@ -366,9 +348,9 @@ async function executeCommand(analysis: AICommandAnalysis): Promise<ExecutionRes
 
       case 'order_query':
         const orders = await getAllOrdersServer()
-        const pendingCount = orders.filter(o => o.status === 'pending').length
-        const doneCount = orders.filter(o => o.status === 'done').length
-        const cancelledCount = orders.filter(o => o.status === 'cancelled').length
+        const pendingCount = orders.filter((o) => (o as any).status === 'pending').length
+        const doneCount = orders.filter((o) => (o as any).status === 'done').length
+        const cancelledCount = orders.filter((o) => (o as any).status === 'cancelled').length
         
         return {
           success: true,
@@ -385,7 +367,7 @@ async function executeCommand(analysis: AICommandAnalysis): Promise<ExecutionRes
       case 'menu_query':
         const menuItems = await getAllMenuItemsServer()
         const popularItems = menuItems
-          .sort((a, b) => (b.total_ordered || 0) - (a.total_ordered || 0))
+          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => ((b.total_ordered as number) || 0) - ((a.total_ordered as number) || 0))
           .slice(0, 5)
         
         return {
@@ -393,11 +375,11 @@ async function executeCommand(analysis: AICommandAnalysis): Promise<ExecutionRes
           action: 'menu_query',
           data: {
             total: menuItems.length,
-            available: menuItems.filter(m => m.availability).length,
-            popularItems: popularItems.map(item => ({
-              name: item.name,
-              orders: item.total_ordered || 0,
-              price: item.price
+            available: menuItems.filter((m) => (m as any).availability).length,
+            popularItems: popularItems.map((item) => ({
+              name: (item as any).name,
+              orders: (item as any).total_ordered || 0,
+              price: (item as any).price
             }))
           }
         }
@@ -434,12 +416,12 @@ async function executeCommand(analysis: AICommandAnalysis): Promise<ExecutionRes
 
 async function generateSmartResponse(
   analysis: AICommandAnalysis,
-  executionResult: ExecutionResult
+  executionResult: unknown
 ): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
   
   if (!apiKey) {
-    return generateFallbackResponse(analysis, executionResult)
+    return generateFallbackResponse(analysis, executionResult as Record<string, unknown>)
   }
 
   const contextPrompt = `
@@ -490,49 +472,42 @@ Generate a varied, conversational response (not using the forbidden formats abov
       // For quota errors (429) or unavailable models, immediately use fallback
       if (response.status === 429 || response.status === 503 || errorText.includes('quota')) {
         console.log('Gemini API unavailable, using fallback response')
-        return generateFallbackResponse(analysis, executionResult)
+        return generateFallbackResponse(analysis, executionResult as Record<string, unknown>)
       }
       throw new Error(`Gemini API error: ${response.status}`)
     }
 
     const data: GeminiResponse = await response.json()
-    return data.candidates[0]?.content?.parts[0]?.text?.trim() || generateFallbackResponse(analysis, executionResult)
+    return data.candidates[0]?.content?.parts[0]?.text?.trim() || generateFallbackResponse(analysis, executionResult as Record<string, unknown>)
 
   } catch (error) {
     console.error('Error generating smart response:', error)
-    return generateFallbackResponse(analysis, executionResult)
+    return generateFallbackResponse(analysis, executionResult as Record<string, unknown>)
   }
 }
 
-function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: ExecutionResult): string {
+function generateFallbackResponse(analysis: AICommandAnalysis, executionResult: Record<string, unknown>): string {
   if (analysis.intent === 'order_status' && executionResult.success) {
     return `Order ${analysis.entities.orderNumber} has been updated to ${analysis.entities.status}.`
   } else if (analysis.intent === 'order_status' && !executionResult.success) {
-    return executionResult.error || `I'm sorry, I couldn't update order ${analysis.entities.orderNumber}. Please try again.`
+    return String(executionResult.error) || `I'm sorry, I couldn't update order ${analysis.entities.orderNumber}. Please try again.`
   } else if (analysis.intent === 'order_query' && executionResult.success) {
-    const data = executionResult.data
-    
-    if (!data) {
-      return 'No order data available.'
-    }
+    const data = executionResult.data as Record<string, unknown>
     
     // Generate varied, conversational responses instead of the standard format
     const responses = [
-      `Right now you have ${data.pending || 0} orders waiting, ${data.done || 0} completed, and ${data.cancelled || 0} cancelled.`,
-      `I see ${data.pending || 0} pending orders, ${data.done || 0} finished orders, and ${data.cancelled || 0} cancelled ones.`,
-      `Current status: ${data.pending || 0} orders in progress, ${data.done || 0} completed orders, ${data.cancelled || 0} cancelled.`,
-      `There are ${data.pending || 0} orders pending, ${data.done || 0} orders done, and ${data.cancelled || 0} cancelled orders.`,
-      `Order summary: ${data.pending || 0} waiting, ${data.done || 0} finished, ${data.cancelled || 0} cancelled.`
+      `Right now you have ${(data as any).pending} orders waiting, ${(data as any).done} completed, and ${(data as any).cancelled} cancelled.`,
+      `I see ${(data as any).pending} pending orders, ${(data as any).done} finished orders, and ${(data as any).cancelled} cancelled ones.`,
+      `Current status: ${(data as any).pending} orders in progress, ${(data as any).done} completed orders, ${(data as any).cancelled} cancelled.`,
+      `There are ${(data as any).pending} orders pending, ${(data as any).done} orders done, and ${(data as any).cancelled} cancelled orders.`,
+      `Order summary: ${(data as any).pending} waiting, ${(data as any).done} finished, ${(data as any).cancelled} cancelled.`
     ]
     
     // Pick a random response for variety
-    return responses[Math.floor(Math.random() * responses.length)]
+    return responses[Math.floor(Math.random() * responses.length)] as string
   } else if (analysis.intent === 'menu_query' && executionResult.success) {
-    const popular = executionResult.data?.popularItems?.[0]
-    if (popular) {
-      return `Your most popular item is ${popular.name} with ${popular.orders} orders.`
-    }
-    return 'No menu data available.'
+    const popular = ((executionResult.data as any)?.popularItems?.[0]) as any
+    return `Your most popular item is ${popular?.name || 'unknown'} with ${popular?.orders || 0} orders.`
   } else if (analysis.intent === 'help') {
     return 'You can say things like "mark order 123 as done", "how many pending orders", or "show popular items".'
   } else {
