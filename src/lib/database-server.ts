@@ -1,4 +1,4 @@
-import { createClient } from './supabase/server'
+import { createClient, createServiceRoleClient } from './supabase/server'
 import { MenuItem, Order } from '@/types'
 
 // Server-side  functions
@@ -56,6 +56,26 @@ export async function getAllMenuItemsServer(businessEmail?: string): Promise<Men
 
   if (error) {
     console.error('Error fetching all menu items:', error)
+    return []
+  }
+
+  return data || []
+}
+
+// Public menu access function - bypasses RLS for public viewing
+export async function getPublicMenuItemsServer(businessEmail: string): Promise<MenuItem[]> {
+  const supabase = await createServiceRoleClient()
+  
+  // Get available menu items for a specific business email
+  const { data, error } = await supabase
+    .from('menu_item')
+    .select('*')
+    .eq('availability', true)
+    .eq('created_by_email', businessEmail)
+    .order('name')
+
+  if (error) {
+    console.error('Error fetching public menu items:', error)
     return []
   }
 

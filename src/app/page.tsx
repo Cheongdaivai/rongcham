@@ -58,12 +58,29 @@ function MainApp() {
 
 function HomeContent() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(sampleMenuItems)
+  const [businessEmail, setBusinessEmail] = useState<string>('')
+
+  // Extract business email from URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const emailParam = searchParams.get('email')
+    if (emailParam) {
+      setBusinessEmail(emailParam)
+      console.log('🏪 Business email from URL:', emailParam)
+    }
+  }, [])
 
   const fetchMenuItems = useCallback(async () => {
     try {
       console.log('🔄 Fetching menu items...')
-      // Add timestamp to prevent caching
-      const response = await fetch(`/api/menu?_t=${Date.now()}`, {
+      // Build URL with business email parameter if available
+      let url = `/api/menu?_t=${Date.now()}`
+      if (businessEmail) {
+        url += `&businessEmail=${encodeURIComponent(businessEmail)}`
+        console.log('🏪 Fetching menu for business:', businessEmail)
+      }
+      
+      const response = await fetch(url, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -90,7 +107,7 @@ function HomeContent() {
       console.error("❌ Error fetching menu items:", error)
       console.log("Using sample data")
     }
-  }, [])
+  }, [businessEmail])
 
   useEffect(() => {
     fetchMenuItems()

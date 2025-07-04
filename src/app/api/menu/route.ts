@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getMenuItemsServer, getAllMenuItemsServer, createMenuItemServer, updateMenuItemServer, deleteMenuItemServer } from '@/lib/database-server'
+import { getMenuItemsServer, getAllMenuItemsServer, getPublicMenuItemsServer, createMenuItemServer, updateMenuItemServer, deleteMenuItemServer } from '@/lib/database-server'
 import { getServerUser } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
@@ -21,10 +21,8 @@ export async function GET(request: NextRequest) {
     } else {
       // Public access - get only available items (filtered by business email if provided)
       if (businessEmail) {
-        // Filter public menu by business
-        menuItems = await getAllMenuItemsServer(businessEmail)
-        // Only return available items
-        menuItems = menuItems.filter(item => item.availability)
+        // Use public menu function to bypass RLS
+        menuItems = await getPublicMenuItemsServer(businessEmail)
       } else {
         // Get all available items (for shared public menu)
         menuItems = await getMenuItemsServer()
@@ -57,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 })
     }
 
-    const menuItem = await createMenuItemServer(menuItemData, user.email)
+    const menuItem = await createMenuItemServer(menuItemData)
     
     if (!menuItem) {
       return NextResponse.json({ error: 'Failed to create menu item' }, { status: 500 })
