@@ -64,20 +64,30 @@ function HomeContent() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search)
     const emailParam = searchParams.get('email')
+    console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()))
+    console.log('🔍 Full URL:', window.location.href)
+    
     if (emailParam) {
       setBusinessEmail(emailParam)
       console.log('🏪 Business email from URL:', emailParam)
+    } else {
+      console.log('🌐 No business email in URL, using general menu')
     }
   }, [])
 
   const fetchMenuItems = useCallback(async () => {
     try {
       console.log('🔄 Fetching menu items...')
-      // Build URL with business email parameter if available
-      let url = `/api/menu?_t=${Date.now()}`
+      
+      let url
       if (businessEmail) {
-        url += `&businessEmail=${encodeURIComponent(businessEmail)}`
+        // Use dedicated business email route
+        url = `/api/menu/${encodeURIComponent(businessEmail)}?_t=${Date.now()}`
         console.log('🏪 Fetching menu for business:', businessEmail)
+      } else {
+        // Use general menu route for public menu
+        url = `/api/menu?_t=${Date.now()}`
+        console.log('🌐 Fetching general public menu')
       }
       
       const response = await fetch(url, {
@@ -102,6 +112,8 @@ function HomeContent() {
         }
       } else {
         console.error('❌ Response not ok:', response.status)
+        const errorText = await response.text()
+        console.error('❌ Error response:', errorText)
       }
     } catch (error) {
       console.error("❌ Error fetching menu items:", error)
@@ -326,12 +338,25 @@ function HomeContent() {
                 </div>
                 <h2 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light text-white mb-3 sm:mb-4 md:mb-6 drop-shadow-2xl ${cormorant.className}`}>
                   <span className="text-white">
-                    Our Menu
+                    {businessEmail ? `Menu by ${businessEmail}` : 'Our Menu'}
                   </span>
                 </h2>
                 <p className={`text-base sm:text-lg md:text-xl lg:text-2xl text-white max-w-4xl mx-auto leading-relaxed font-light px-4 drop-shadow-lg ${cormorant.className}`}>
-                  Each dish tells a story of Cambodia&apos;s rich culinary heritage, reimagined with contemporary finesse
+                  {businessEmail 
+                    ? `Discover the culinary excellence from ${businessEmail.split('@')[0]}'s kitchen`
+                    : "Each dish tells a story of Cambodia's rich culinary heritage, reimagined with contemporary finesse"
+                  }
                 </p>
+                {businessEmail && (
+                  <div className="mt-4 sm:mt-6">
+                    <div className="inline-flex items-center gap-2 bg-amber-600/20 backdrop-blur-sm px-4 py-2 rounded-full border border-amber-400/30">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                      <span className={`text-amber-100 text-sm ${cormorant.className}`}>
+                        Business Menu: {businessEmail}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-center mt-3 sm:mt-4 md:mt-6">
                   <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent w-12 sm:w-16 md:w-24" />
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-amber-600 rounded-full mx-2 sm:mx-3 md:mx-4" />

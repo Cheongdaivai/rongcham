@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
     const includeUnavailable = searchParams.get('includeUnavailable') === 'true'
     const businessEmail = searchParams.get('businessEmail')
     
+    console.log('🔍 Menu API - URL params:', Object.fromEntries(searchParams.entries()))
+    console.log('🏪 Menu API - businessEmail:', businessEmail)
+    console.log('📋 Menu API - includeUnavailable:', includeUnavailable)
+    
     let menuItems
     if (includeUnavailable) {
       // Admin access - get all items (optionally filtered by business email)
@@ -17,17 +21,22 @@ export async function GET(request: NextRequest) {
       }
       // If no businessEmail specified, use authenticated user's email
       const filterEmail = businessEmail || user.email
+      console.log('👤 Admin access - filterEmail:', filterEmail)
       menuItems = await getAllMenuItemsServer(filterEmail || undefined)
     } else {
       // Public access - get only available items (filtered by business email if provided)
       if (businessEmail) {
         // Use public menu function to bypass RLS
+        console.log('🌐 Public access - fetching for business:', businessEmail)
         menuItems = await getPublicMenuItemsServer(businessEmail)
       } else {
         // Get all available items (for shared public menu)
+        console.log('🌐 Public access - fetching general menu')
         menuItems = await getMenuItemsServer()
       }
     }
+    
+    console.log(`📦 Menu API - returning ${menuItems.length} items`)
     
     // Add cache-busting headers
     const response = NextResponse.json(menuItems)
